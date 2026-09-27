@@ -1,0 +1,19 @@
+{
+  "name": "Hockey Manager Junior",
+  "short_name": "Hockey Junior",
+  "description": "Jeu de manager de hockey sur gazon U12 : compos, matchs, entraînements en mini-jeux et mode joueur.",
+  "lang": "fr",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#E4EDF6",
+  "theme_color": "#1D5FAA",
+  "categories": ["games", "sports", "kids"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
