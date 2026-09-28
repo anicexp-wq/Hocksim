@@ -1,6 +1,6 @@
 /* Hockey Manager Junior — service worker
    Change VERSION à chaque mise à jour de index.html pour forcer le rafraîchissement. */
-const VERSION = 'hmj-v1';
+const VERSION = 'hmj-v4';
 const CORE = ['./', './index.html', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png',
   './icons/apple-touch-icon.png', './icons/favicon.png'];
