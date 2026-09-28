@@ -2,7 +2,7 @@
 
 ## Mettre en ligne sur GitHub Pages
 1. Crée un dépôt (ex. `hockey-junior`) et dépose **tout le contenu** de ce dossier à la racine :
-   `index.html`, `manifest.webmanifest`, `sw.js` et le dossier `icons/`.
+   `index.html`, `manifest.webmanifest`, `sw.js` et les 5 images `.png` (tous les fichiers au même niveau, sans sous-dossier).
 2. Settings → Pages → Source : branche `main`, dossier `/ (root)`.
 3. L'appli sera disponible à `https://<ton-compte>.github.io/hockey-junior/`.
 
@@ -13,9 +13,14 @@
 Une fois ouverte une première fois, l'appli fonctionne hors ligne.
 
 ## Mettre à jour
-Remplace `index.html`, puis change `VERSION` dans `sw.js` (ex. `hmj-v2`).
+Remplace `index.html`, puis change `VERSION` dans `sw.js` (ex. `hmj-v6`).
 La nouvelle version s'affiche à la réouverture suivante de l'appli.
 
 ## Sauvegarde
 La partie est enregistrée sur l'appareil (dans le navigateur de l'appli).
 Désinstaller l'appli ou effacer les données du navigateur efface la progression.
+
+## Vérifier que l'appli est installable
+Ouvre ces deux adresses dans le navigateur : elles doivent s'afficher (pas d'erreur 404).
+- `https://<ton-compte>.github.io/<dépôt>/manifest.webmanifest`
+- `https://<ton-compte>.github.io/<dépôt>/icon-512.png`

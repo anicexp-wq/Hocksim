@@ -1,9 +1,9 @@
 /* Hockey Manager Junior — service worker
    Change VERSION à chaque mise à jour de index.html pour forcer le rafraîchissement. */
-const VERSION = 'hmj-v4';
+const VERSION = 'hmj-v5';
 const CORE = ['./', './index.html', './manifest.webmanifest',
-  './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png',
-  './icons/apple-touch-icon.png', './icons/favicon.png'];
+  './icon-192.png', './icon-512.png', './icon-maskable-512.png',
+  './apple-touch-icon.png', './favicon.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
