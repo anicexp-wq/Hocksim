@@ -50,7 +50,7 @@ nav button:hover:not([aria-current="true"]){background:rgba(255,255,255,.15)}
 
 main{padding:26px 0 60px}
 .grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:22px;align-items:start}
-@media (max-width:900px){.grid{grid-template-columns:1fr}}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
 .panel{background:var(--surface);border-radius:20px;padding:20px;border:2px solid var(--edge)}
 .panel h2{font-size:24px;margin-bottom:12px}
 .hint{color:var(--muted);font-size:15px;margin:4px 0 12px}
@@ -148,7 +148,9 @@ main{padding:26px 0 60px}
 .pcgrid select{font:inherit;font-size:15px;padding:5px 8px;border-radius:10px;border:2px solid var(--edge);background:var(--surface2);color:var(--ink)}
 .sq{width:30px;height:30px;border-radius:9px;border:2px solid var(--edge);background:var(--surface);display:grid;place-items:center;font-weight:800;flex:none;padding:0}
 .sq[aria-pressed="true"]{background:var(--good);border-color:var(--good);color:#fff}
-.plw{display:flex;gap:8px;align-items:center}
+.plw{display:flex;gap:6px;align-items:center}
+.plw .pl{flex:1;min-width:0;width:auto}
+.pl .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
 .pl.out{opacity:.55}
 .msg{background:var(--ball);color:#2B2100;border-radius:12px;padding:8px 12px;margin-bottom:10px;font-weight:600}
 .rules{margin:0;padding-left:20px;color:var(--muted);font-size:15px}
@@ -280,12 +282,17 @@ body.inmatch main{padding:0}
 .fit #mgb .btn{min-height:52px}
 @media (max-width:640px){.box.fit{height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:0;padding:10px 12px}
  .mview .board .tn{display:none}.mview .board{justify-content:space-between}}
+.slotsw{display:inline-flex;gap:4px;background:rgba(255,255,255,.15);border-radius:999px;padding:3px;margin-left:10px;vertical-align:middle}
+.slotsw button{border:0;background:transparent;color:inherit;border-radius:999px;padding:2px 12px;font-weight:700;font-size:14px}
+.slotsw button[aria-pressed="true"]{background:#fff;color:var(--turf)}
+.setup .slotsw{background:var(--surface2);color:var(--ink)}
+.setup .slotsw button[aria-pressed="true"]{background:var(--turf);color:#fff}
 @media (max-width:640px){.choices{grid-template-columns:repeat(3,1fr);gap:8px}.choices .btn{min-height:62px;font-size:17px;padding:8px 6px}.sheetin{padding:14px 12px calc(14px + env(safe-area-inset-bottom,0px))}}
 </style>
 </head>
 <body>
 <header class="top" id="top" hidden><div class="wrap">
-  <div class="brand"><div class="crest" id="crest"></div><div><b id="clubName"></b><small id="clubSub"></small></div></div>
+  <div class="brand"><div class="crest" id="crest"></div><div><b id="clubName"></b><small id="clubSub"></small></div><span id="slotBox"></span></div>
   <nav id="nav"></nav><button class="btn go" id="installBtn" hidden style="padding:6px 14px;font-size:15px">Installer l’appli</button>
 </div></header>
 <main><div class="wrap" id="app"></div></main>
@@ -298,9 +305,15 @@ const R=Math.random, rint=(a,b)=>a+Math.floor(R()*(b-a+1)), pick=a=>a[Math.floor
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(R()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const KEY='hockey-manager-junior-u12-v1';
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function load(){try{const r=localStorage.getItem(KEY);return r?JSON.parse(r):null}catch(e){return null}}
+/* deux parties séparées : U12 et U10 */
+const SLOTS={u12:{cat:'U12',key:'hockey-manager-junior-u12-v1'},u10:{cat:'U10',key:'hockey-manager-junior-u10-v1'}};
+let SLOT=(()=>{try{return localStorage.getItem('hmj-slot')||'u12'}catch(e){return 'u12'}})();
+const keyOf=()=>SLOTS[SLOT].key;
+function save(){try{localStorage.setItem(keyOf(),JSON.stringify(S))}catch(e){}}
+function load(){try{const r=localStorage.getItem(keyOf());return r?JSON.parse(r):null}catch(e){return null}}
+const U10=['Anako','Namo','Louis','Liam','Arthur','Jules','Ulysse','Aaron','Thimoty','Augustin','Louka'];
+const catOf=()=>S&&S.cat?S.cat:SLOTS[SLOT].cat;
+const nPCDef=()=>catOf()==='U10'?3:4;
 
 /* ---------- règles U12 (8 contre 8) ---------- */
 const MATCH_MIN=50, HALF=25, SQUAD_MAX=12, NB=8, BASE_MS=1100;
@@ -345,12 +358,14 @@ const team=id=>S.teams[id];
 const first=p=>p.name.split(' ')[0];
 
 /* ---------- création ---------- */
-function genPlayers(club){
-  const posList=['G','G','D','D','D','D','D','M','M','M','M','M','A','A','A','A'];
-  const real=club==='Grez HC', names=shuffle(real?GREZ:NAMES), nums=shuffle([...Array(22)].map((_,i)=>i+2).filter(n=>n!==21));
+function genPlayers(club,cat){
+  const u10=cat==='U10', posList=u10?['G','D','D','D','M','M','M','M','A','A','A']:['G','G','D','D','D','D','D','M','M','M','M','M','A','A','A','A'];
+  const real=club==='Grez HC';
+  let names=shuffle(real?(u10?U10:GREZ):NAMES);
+  if(real&&u10&&names[0]==='Anako'){names.push(names.shift())} nums=shuffle([...Array(22)].map((_,i)=>i+2).filter(n=>n!==21));
   const L='ABCDEFGHJKLMNPRSTVW';
   return posList.map((pos,i)=>{
-    const b=rint(46,60), bias={G:{def:12},D:{def:10,vit:2},M:{tech:8,vit:4},A:{att:10,vit:5}}[pos];
+    const b=u10?rint(42,56):rint(46,60), bias={G:{def:12},D:{def:10,vit:2},M:{tech:8,vit:4},A:{att:10,vit:5}}[pos];
     const st=k=>clamp(b+rint(-6,6)+(bias[k]||0),30,85);
     return {id:'p'+i,name:real?names[i]:names[i]+' '+pick(L.split(''))+'.',num:pos==='G'?(i===0?1:21):nums[i],pos,
       att:st('att'),def:st('def'),vit:st('vit'),tech:st('tech'),energy:100,goals:0,mins:0,apps:0,motm:0,hist:[]};
@@ -371,10 +386,11 @@ function makeAITeams(userName){
     return {id:i+1,name,color,att:s+rint(-3,3),def:s+rint(-3,3),mid:s+rint(-3,3),gk:s+rint(-2,4)}});
 }
 function newGame(name,color){
-  S={v:1,season:1,round:0,form:'322',style:'eq',press:'bas',trained:false,trainMsg:null,last:null,
-     players:genPlayers(name),teams:[{id:0,name,color,user:true}].concat(makeAITeams(name))};
+  const cat=SLOTS[SLOT].cat;
+  S={v:1,cat,season:1,round:0,form:'322',style:'eq',press:'bas',trained:false,trainMsg:null,last:null,
+     players:genPlayers(name,cat),teams:[{id:0,name,color,user:true}].concat(makeAITeams(name))};
   S.fixtures=makeFixtures(8);
-  S.autoSub='fatigue'; const ere=S.players.find(p=>p.name==='Ereor'); S.hero=ere?ere.id:null; S.heroMode=!!ere; S.squad=autoSquad(); S.lineup=autoLineup(S.squad); S.pc=autoPC();
+  S.autoSub='fatigue'; const ere=S.players.find(p=>p.name===(cat==='U10'?'Anako':'Ereor')); S.hero=ere?ere.id:null; S.heroMode=!!ere; S.squad=autoSquad(); S.lineup=autoLineup(S.squad); S.pc=autoPC();
   save();
 }
 /* feuille de match : 12 joueurs max, priorité à ceux qui ont le moins joué */
@@ -398,7 +414,7 @@ function autoPC(){
   const f=S.squad.map(byId).filter(p=>p.pos!=='G'), used=new Set();
   const best=fn=>{const p=f.filter(x=>!used.has(x.id)).sort((a,b)=>fn(b)-fn(a))[0];used.add(p.id);return p.id};
   const shoot=best(p=>p.att*.7+p.tech*.3), stop=best(p=>p.tech), push=best(p=>p.vit*.5+p.tech*.5);
-  const def=[...f].sort((a,b)=>(b.def*.6+b.vit*.4)-(a.def*.6+a.vit*.4)).slice(0,4).map(p=>p.id);
+  const def=[...f].sort((a,b)=>(b.def*.6+b.vit*.4)-(a.def*.6+a.vit*.4)).slice(0,nPCDef()).map(p=>p.id);
   return {push,stop,shoot,def};
 }
 function ensurePC(){
@@ -443,7 +459,10 @@ const strStars=t=>{const s=clamp(Math.round(((t.att+t.def+t.mid)/3-45)/4),1,5);r
 
 /* ---------- interface générale ---------- */
 let S=load();
-if(S){S.autoSub=S.autoSub||'fatigue';if(S.hero===undefined){const e=S.players.find(p=>p.name==='Ereor');S.hero=e?e.id:null;S.heroMode=!!e}S.players.forEach(p=>{p.hist=p.hist||[];p.motm=p.motm||0;p.base=p.base||{att:p.att,def:p.def,vit:p.vit,tech:p.tech};p.xp=p.xp||0;p.pts=p.pts||0;p.ast=p.ast||0})}
+function migrate(){if(!S)return;S.cat=S.cat||SLOTS[SLOT].cat;if(S.pc&&S.pc.def)S.pc.def=S.pc.def.slice(0,nPCDef());S.autoSub=S.autoSub||'fatigue';if(S.hero===undefined){const e=S.players.find(p=>p.name==='Ereor');S.hero=e?e.id:null;S.heroMode=!!e}S.players.forEach(p=>{p.hist=p.hist||[];p.motm=p.motm||0;p.base=p.base||{att:p.att,def:p.def,vit:p.vit,tech:p.tech};p.xp=p.xp||0;p.pts=p.pts||0;p.ast=p.ast||0})}
+migrate();
+function switchSlot(sl){if(sl===SLOT||ui.match)return;if(S)save();SLOT=sl;try{localStorage.setItem('hmj-slot',sl)}catch(e){}S=load();migrate();ui.tab='club';ui.pick=null;ui.msg=null;render();window.scrollTo(0,0)}
+const slotSw=()=>`<div class="slotsw">${Object.entries(SLOTS).map(([k,v])=>`<button data-act="slot-sw" data-v="${k}" aria-pressed="${SLOT===k}">${v.cat}</button>`).join('')}</div>`;
 const ui={tab:'club',pick:null,match:null,spd:'normal',timer:null,msg:null,cam:false,hm:null};
 function crestHTML(t,big){const ini=t.name.replace(/^Les? /,'').slice(0,2).toUpperCase();return `<div class="crest${big?' big':''}" style="background:${t.color}">${esc(ini)}</div>`}
 
@@ -454,7 +473,8 @@ function render(){
   $('#top').hidden=false;
   $('#crest').outerHTML=crestHTML(S.teams[0]).replace('class="crest"','class="crest" id="crest"');
   $('#clubName').textContent=S.teams[0].name;
-  $('#clubSub').textContent=`U12 · Saison ${S.season} · Journée ${Math.min(S.round+1,14)}/14`;
+  $('#slotBox').innerHTML=slotSw();
+  $('#clubSub').textContent=`${catOf()} · Saison ${S.season} · Journée ${Math.min(S.round+1,14)}/14`;
   const tabs=[['club','Club'],['equipe','Équipe'],['joueurs','Joueurs'],['train','Entraînement'],['classement','Classement']];
   $('#nav').innerHTML=ui.match&&!ui.match.done?'':tabs.map(([k,l])=>`<button data-act="tab" data-v="${k}" aria-current="${ui.tab===k}">${l}</button>`).join('');
   ({club:renderClub,equipe:renderTeam,train:renderTrain,classement:renderTable,joueurs:renderPlayers,match:renderMatch})[ui.tab]();
@@ -463,8 +483,8 @@ function render(){
 function renderSetup(){
   let club=CLUBS[0][0], color=CLUBS[0][1];
   $('#app').innerHTML=`<div class="setup panel">
-    <h1 style="font-size:40px">Hockey Manager Junior</h1>
-    <p class="hint">Tu es le coach ! Choisis tes joueurs, ta tactique et mène ton équipe au titre du championnat U12.</p>
+    <div class="row" style="justify-content:space-between"><h1 style="font-size:36px">Hockey Manager Junior</h1>${slotSw()}</div>
+    <p class="hint">Nouvelle partie <b>${SLOTS[SLOT].cat}</b>. Tu es le coach ! Choisis tes joueurs, ta tactique et mène ton équipe au titre du championnat ${SLOTS[SLOT].cat}.</p>
     <p style="margin:0 0 6px"><b>Quel club veux-tu coacher ?</b></p>
     <div class="seg" id="clubs">${CLUBS.map(([n,c],i)=>`<button aria-pressed="${i===0}" data-n="${esc(n)}" data-c="${c}"><span class="chip" style="background:${c}"></span>${esc(n)}</button>`).join('')}</div>
     <p style="margin:18px 0 0"><b>Couleur du maillot</b></p>
@@ -478,13 +498,13 @@ function renderSetup(){
 }
 
 /* ---------- Club ---------- */
-const RULES=`<ul class="rules">
+const RULES=()=>`<ul class="rules">
   <li>8 contre 8 (7 joueurs + 1 gardien) sur un demi-terrain</li>
   <li>2 mi-temps de 25 minutes, 5 minutes de pause</li>
   <li>12 joueurs maximum sur la feuille de match</li>
   <li>Changements illimités, à tout moment sauf pendant un corner court</li>
   <li>1 temps mort par coach, pas dans les 5 dernières minutes</li>
-  <li>Corner court défendu par 4 défenseurs + le gardien</li>
+  <li>Corner court défendu par ${nPCDef()} défenseurs + le gardien</li>
   <li>Long corner sur la ligne du milieu</li></ul>`;
 function renderClub(){
   const f=nextFix(), tb=table(), me=S.teams[0];
@@ -510,7 +530,7 @@ function renderClub(){
     ${S.last.scorers?`<p class="hint">Buts : ${esc(S.last.scorers)}</p>`:''}
     ${S.last.motm?`<p class="hint">⭐ Joueur du match : ${esc(S.last.motm)}</p>`:''}</div>`:'';
   $('#app').innerHTML=`<div class="grid"><div>${S.heroMode?heroCard():''}${hero}${last}
-    <div class="panel" style="margin-top:22px"><h2>Les règles U12</h2>${RULES}</div></div>
+    <div class="panel" style="margin-top:22px"><h2>Les règles ${catOf()}</h2>${RULES()}</div></div>
     <div class="panel"><h2>Classement</h2>${tableHTML(tb,true)}
     <p class="hint" style="margin-top:16px">${S.trained?'Entraînement de la semaine : fait ✔':'Pas encore d’entraînement cette semaine.'}</p>
     <button class="btn" data-act="reset" style="margin-top:8px;font-size:14px">Recommencer une nouvelle partie</button></div></div>`;
@@ -580,8 +600,8 @@ function pcHTML(){
    <div class="seg"><button data-act="pclive" data-v="1" aria-pressed="${S.pcLive!==false}">À jouer moi-même<small>Poussée, stop et tir en direct</small></button><button data-act="pclive" data-v="0" aria-pressed="${S.pcLive===false}">Automatiques<small>Le jeu décide</small></button></div>
    <p style="margin:16px 0 4px"><b>Corners courts en attaque</b></p>
    <div class="pcgrid">${s('push','Pousseur',S.pc.push)}${s('stop','Stoppeur',S.pc.stop)}${s('shoot','Tireur',S.pc.shoot)}</div>
-   <p style="margin:12px 0 4px"><b>Corners courts en défense</b> <span class="hint">(4 défenseurs + le gardien)</span></p>
-   <div class="pcgrid">${S.pc.def.map((id,i)=>s('def'+i,['1er sortant','2e sortant','Poteau','Ligne'][i],id)).join('')}</div>`;
+   <p style="margin:12px 0 4px"><b>Corners courts en défense</b> <span class="hint">(${nPCDef()} défenseurs + le gardien)</span></p>
+   <div class="pcgrid">${S.pc.def.slice(0,nPCDef()).map((id,i)=>s('def'+i,['1er sortant','2e sortant','Poteau','Ligne'][i],id)).join('')}</div>`;
 }
 function lineupEditor(inMatch){
   const onIds=new Set(S.lineup), sq=new Set(S.squad);
@@ -703,7 +723,7 @@ function pcAtt(){
 }
 function pcDef(){
   const on=onField(); let d=S.pc.def.map(id=>on.find(x=>x.id===id)).filter(Boolean);
-  on.filter(x=>!d.includes(x)).sort((a,b)=>b.def-a.def).forEach(x=>{if(d.length<4)d.push(x)});
+  on.filter(x=>!d.includes(x)).sort((a,b)=>b.def-a.def).forEach(x=>{if(d.length<nPCDef())d.push(x)});
   const gk=byId(S.lineup[0]);
   return {d,gk,q:d.reduce((s,p)=>s+p.def*.6+p.vit*.4,0)/d.length*.6+gk.def*.4};
 }
@@ -757,7 +777,7 @@ function simMinute(M){
         if(goal){M.us++;M.scorers.push(sc.id)}
         fr(null,`Faute dans le cercle : ${pick([`la balle touche le pied du n°${num}`,`obstruction du n°${num}`,`le n°${num} tape dans la crosse de ${first(p)}`,`le n°${num} bouscule ${first(p)}`])} ! Corner court pour ${me}.`,'foul',1.3);
         cardCheck('o',`le n°${num} de ${o.name}`);
-        fr([97,10],`${first(pc.push)} se prépare à pousser depuis la ligne de fond. ${o.name} place 4 défenseurs et son gardien.`,'',1.4,{who:pc.push.id});
+        fr([97,10],`${first(pc.push)} se prépare à pousser depuis la ligne de fond. ${o.name} place ${nPCDef()} défenseurs et son gardien.`,'',1.4,{who:pc.push.id});
         fr([84,46],`${first(pc.stop)} arrête la balle au bord du cercle.`,'',1,{who:pc.stop.id});
         fr(goal?[97,52]:[91,40],goal?`BUT ! ${first(sc)} marque sur corner court !`:pick([`${first(pc.shoot)} frappe… repoussé par le gardien !`,`La frappe de ${first(pc.shoot)} passe au-dessus.`,`Un défenseur sort très vite et bloque le tir de ${first(pc.shoot)}.`]),goal?'goal':'',goal?2.6:1.3,{who:sc.id,goal:goal?'u':null});}
       }
@@ -1308,7 +1328,7 @@ function pcCtl(){
       <button class="btn" data-pcg="v:defl"><span class="em">🎯</span>Déviation<small>${esc(first(who.stop))} arrête, puis passe à ${esc(first(G.defl))} qui dévie au poteau.</small></button></div>`,
     readyStop:()=>`<p class="sit">${esc(first(who.push))} va pousser la balle vers ${esc(first(who.stop))}.</p><p class="how">Appuie sur <b>STOP</b> quand la balle est dans le <b class="g">cercle vert</b>.</p>${big('Pousser la balle ▶','go')}`,
     travel:()=>`<p class="how">Attends que la balle entre dans le cercle… puis <b>STOP !</b></p>${big('STOP !')}`,
-    aim:()=>`<p class="how">La flèche jaune bouge le long du but. Tire quand elle est <b>loin du gardien</b>, avant que le défenseur n’arrive !</p>${big('TIRER !')}`,
+    aim:()=>`<p class="how">Le gardien suit la flèche jaune ! Tire quand elle <b>change de sens</b> et que le gardien est en retard, avant que le défenseur n’arrive.</p>${big('TIRER !')}`,
     defl:()=>`<p class="how">La balle part vers ${esc(first(G.defl))}. Appuie quand elle est dans le <b class="g">cercle vert</b> !</p>${big('DÉVIER !')}`,
     readyOut:()=>`<p class="sit">${esc(first(G.pd.d[0]))} est ton 1er sortant, derrière la ligne de fond.</p><p class="how">Appuie sur <b>SORTIR</b> dès que la balle est poussée. Pas avant : sinon il doit repartir au milieu du terrain !</p>${big('Je suis prêt ▶','go')}`,
     wait:()=>`<p class="how">Regarde bien le pousseur…</p>${big('SORTIR !')}`,
@@ -1336,11 +1356,11 @@ function pcInput(v){
     const d=dist(G.ball,DP), before=G.t<G.T;
     if(d>G.win) return pcFail(before?'Trop tôt !':'Trop tard !',`${first(G.defl)} rate la déviation.`,G.defl);
     G.M.st.u.sh++; pcHeroMark(G.defl,true);
-    return R()<.68?pcGoal(G.defl,`Déviation parfaite de ${first(G.defl)} au poteau !`):pcFail('Arrêté…',`${first(G.defl)} dévie… le gardien arrête du pied !`,null)}
+    return R()<.42?pcGoal(G.defl,`Déviation parfaite de ${first(G.defl)} au poteau !`):pcFail('Arrêté…',`${first(G.defl)} dévie… le gardien arrête du pied !`,null)}
   if(G.phase==='aim'&&v==='tap'){
-    const sh=G.pc.shoot, tx=GL[0]+8+(GL[1]-GL[0]-16)*G.aim, reach=clamp(20+(G.M.opp.gk-55)*.4,16,30);
+    const sh=G.pc.shoot, tx=GL[0]+8+(GL[1]-GL[0]-16)*G.aim, reach=clamp(22+(G.M.opp.gk-55)*.4,18,30);
     G.M.st.u.sh++; G.shotX=tx; G.ball=[tx,40];
-    const far=Math.abs(tx-G.gkx)>reach, goal=far&&R()<clamp(.78+(sh.att-55)*.01,.6,.95);
+    const far=Math.abs(tx-G.gkx)>reach, goal=far&&R()<clamp(.32+(sh.att-55)*.008,.25,.46)*(nPCDef()===3?1.1:1);
     pcHeroMark(sh,goal);
     return goal?pcGoal(sh,`${first(sh)} marque sur corner court !`):pcFail('Arrêté…',far?`La frappe de ${first(sh)} frôle le poteau !`:`${first(sh)} tire sur le gardien, arrêt !`,null)}
   if(G.phase==='wait'&&v==='tap'){
@@ -1370,11 +1390,11 @@ const lerp=(a,b,p)=>[a[0]+(b[0]-a[0])*p,a[1]+(b[1]-a[1])*p];
 function pcLoop(t){
   const G=PCG; if(!G||!$('#pcc')) return;
   const dt=Math.min(.05,(t-G.last)/1000);G.last=t;G.t+=dt;
-  G.gkx=280+Math.sin(t/650)*22;
+  if(G.phase==='aim'){const tx=GL[0]+8+(GL[1]-GL[0]-16)*G.aim;G.gkx+=(tx-G.gkx)*Math.min(1,dt*3.2)} else G.gkx=280+Math.sin(t/650)*22;
   if(G.phase==='travel'){const p=Math.min(G.t/G.T,1.35);G.ball=lerp(P0,SP,p);G.rush=lerp(G.rushFrom,[250,150],Math.min(G.t/2.2,1));
     if(p>=1.3)pcFail('Trop tard !',`La balle a dépassé ${first(G.pc.stop)}.`,G.pc.stop)}
   if(G.phase==='defl'){const p=Math.min(G.t/G.T,1.35);G.ball=lerp(SP,DP,p);if(p>=1.3)pcFail('Trop tard !',`${first(G.defl)} rate la déviation.`,G.defl)}
-  if(G.phase==='aim'){G.aim+=G.aimDir*dt/.8;if(G.aim>1||G.aim<0){G.aimDir*=-1;G.aim=clamp(G.aim,0,1)}
+  if(G.phase==='aim'){G.aim+=G.aimDir*dt/.7;if(G.aim>1||G.aim<0){G.aimDir*=-1;G.aim=clamp(G.aim,0,1)}
     const p=Math.min(G.t/G.rushT,1);G.rush=lerp(G.rushFrom,[SP[0]+4,SP[1]-22],p);
     if(p>=1){G.M.st.u.sh++;pcHeroMark(G.pc.shoot,false);pcFail('Bloqué !',`Trop tard ! Le 1er défenseur bloque le tir de ${first(G.pc.shoot)}.`,null)}}
   if(G.side==='def'&&G.phase==='wait'){
@@ -1416,7 +1436,7 @@ function pcDraw(G,t){
   let gx=G.gkx; if(G.phase==='dive'&&G.dived) gx=GL[0]+(GL[1]-GL[0])*(G.diveZ+.5)/3; if(G.phase==='end'&&G.diveZ!=null) gx=GL[0]+(GL[1]-GL[0])*(G.diveZ+.5)/3;
   drawFig(c,gkp?{...figOf(gkp),gk:true}:{color:dC,num:1,gk:true,seed:'ogk'+oc},gx,gy,W+4,S.heroMode&&gkp&&gkp.id===S.hero?'#FFC928':null);
   if(gkp) drawLabel(c,(S.heroMode&&gkp.id===S.hero?'⭐ ':'')+first(gkp),gx,gy,S.heroMode&&gkp.id===S.hero);
-  const defs=att?[null,null,null,null]:G.pd.d, started=att?G.phase!=='choose'&&G.phase!=='readyStop':G.pushed;
+  const defs=att?Array(nPCDef()).fill(null):G.pd.d.slice(0,nPCDef()), started=att?G.phase!=='choose'&&G.phase!=='readyStop':G.pushed;
   const homes=[[222,60],[172,60],[388,60],[438,60]], outs=[G.rush,[300,190],[GL[0]+6,70],[GL[1]-6,70]];
   defs.forEach((p,i)=>{const [x,y]=i===0?G.rush:started?outs[i]:homes[i];const num=att?[2,5,6,3][i]:null;
     if(!att&&i===0&&!G.pushed){c.beginPath();c.ellipse(x,y-2,26,8,0,0,7);c.lineWidth=4;c.strokeStyle='#FFC928';c.stroke()}
@@ -1500,6 +1520,7 @@ document.addEventListener('click',e=>{
   else if(a==='autosub'){S.autoSub=v;if(ui.match){const el=$('#autoSeg');if(el)el.innerHTML=autoSubSeg();if($('#editor'))refreshEditor();say(ui.match.shownMin||0,`Changements automatiques : ${AUTOSUB[v][0].toLowerCase()}.`,'info')}else{save();refreshEditor()}}
   else if(a==='pause'){if(ui.match&&!ui.match.done&&!ui.hm&&!PCG)openBreak('pause')}
   else if(a==='pclive'){S.pcLive=v==='1';save();refreshEditor()}
+  else if(a==='slot-sw'){switchSlot(v)}
   else if(a==='speedcycle'){const ks=Object.keys(SPEEDS);ui.spd=ks[(ks.indexOf(ui.spd)+1)%ks.length];b.textContent=SPEEDS[ui.spd][0]}
   else if(a==='cam'){ui.cam=!ui.cam;b.textContent=ui.cam?'Voir tout le terrain':'Suivre '+first(heroP())}
   else if(a==='spend'){const H=heroP();if(H&&H.pts>0){H[v]=Math.min(95,H[v]+2);H.pts--;save();render()}}
@@ -1516,7 +1537,7 @@ document.addEventListener('click',e=>{
     S.teams.slice(1).forEach(t=>{const d=rint(-2,4);t.att+=d;t.def+=d;t.mid+=d;t.gk+=rint(-1,3)});
     save();render();
   }
-  else if(a==='reset'){if(confirm('Effacer ton équipe et recommencer une nouvelle partie ?')){try{localStorage.removeItem(KEY)}catch(e){}S=null;ui.tab='club';render()}}
+  else if(a==='reset'){if(confirm(`Effacer la partie ${catOf()} et recommencer ?`)){try{localStorage.removeItem(keyOf())}catch(e){}S=null;ui.tab='club';render()}}
 });
 render();
 /* ---------- PWA : hors ligne + installation ---------- */
