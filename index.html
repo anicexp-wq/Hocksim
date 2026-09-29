@@ -568,6 +568,8 @@ const CLUBS=[
  ['Lara','#D63A5E',1],['Jaguar','#C98A00',1],['Luxembourg','#2F7DC1',1],['Namur','#B83227',1],['Ottignies','#00897B',1],['Pingouin','#455A64',1],['Braine','#8E24AA',1],['Louvain-la-Neuve','#1565C0',1],
  ['Grez HC','#1E9E68',2],['Ciney','#56687C',2],['Wavre','#EF6C00',2],['Mons','#AD1457',2],['Tournai','#6D4C41',2],['Liège','#C62828',2],['Rixensart','#0277BD',2],['Ombrage','#558B2F',2]];
 const DIVSTR=[67,58,50];
+/* difficulté liée à la division : LFH3 facile, LFH2 moyen, LFH1 difficile */
+const DIFF=()=>S&&S.div!=null&&!(typeof D!=='undefined'&&D)?[.8,1,1.25][S.div]:1, DIFFN=()=>['Difficile','Moyen','Facile'][S&&S.div!=null?S.div:2];
 const divIds=d=>S.teams.filter(t=>t.div===d).map(t=>t.id).sort((a,b)=>a-b);
 function mkTeam(id,name,color,div){const s=DIVSTR[div]+rint(-5,5);return {id,name,color,div,att:s+rint(-3,3),def:s+rint(-3,3),mid:s+rint(-3,3),gk:s+rint(-2,4)}}
 function divFixtures(){const ids=divIds(S.div);return makeFixtures(ids.length).map(r=>r.map(f=>({h:ids[f.h],a:ids[f.a],hs:null,as:null})))}
@@ -741,7 +743,7 @@ function renderSetup(){
   const g0=CLUBS.find(c=>c[0]==='Grez HC'); let club=g0[0], color=g0[1];
   $('#app').innerHTML=`<div class="setup panel">
     <div class="row" style="justify-content:space-between"><h1 style="font-size:36px">Hockey Manager Junior</h1><span>${sndBtnHTML()}${slotSw()}</span></div>
-    <p class="hint">Nouvelle partie <b>${SLOTS[SLOT].cat}</b>. Tu es le coach ! Choisis tes joueurs, ta tactique et monte de la LFH3 jusqu’en LFH1 pour devenir grand champion ${SLOTS[SLOT].cat} !</p>
+    <p class="hint">Nouvelle partie <b>${SLOTS[SLOT].cat}</b>. Tu es le coach ! Choisis tes joueurs, ta tactique et monte de la LFH3 jusqu’en LFH1 pour devenir grand champion ${SLOTS[SLOT].cat} ! Plus tu montes, plus les actions sont difficiles : LFH3 facile, LFH2 moyen, LFH1 difficile.</p>
     <p style="margin:0 0 6px"><b>Quel club veux-tu coacher ?</b></p>
     <div id="clubs">${LEAGUE.map((L,d)=>`<p class="hint" style="margin:8px 0 4px"><b>${L}</b>${d===0?' · la plus forte':d===2?' · on commence ici !':''}</p><div class="seg">${CLUBS.filter(c=>c[2]===d).map(([n,c])=>`<button aria-pressed="${n===club}" data-n="${esc(n)}" data-c="${c}"><span class="chip" style="background:${c}"></span>${esc(n)}</button>`).join('')}</div>`).join('')}</div>
     <p style="margin:18px 0 0"><b>Couleur du maillot</b></p>
@@ -774,7 +776,7 @@ function renderClub(){
     const home=f.home, opp=team(f.opp), L=home?me:opp, Rt=home?opp:me;
     const w=lineupWarnings();
     hero=`<div class="hero">
-      <div class="meta">${f.cup?`🏆 Coupe · ${CUPN[S.cup.stage]} (${LEAGUE[opp.div]})`:`${LEAGUE[S.div]} · Journée ${S.round+1} sur 14 · ${home?'À domicile':'À l’extérieur'}`}</div>
+      <div class="meta">${f.cup?`🏆 Coupe · ${CUPN[S.cup.stage]} (${LEAGUE[opp.div]})`:`${LEAGUE[S.div]} (${DIFFN().toLowerCase()}) · Journée ${S.round+1} sur 14 · ${home?'À domicile':'À l’extérieur'}`}</div>
       <div class="vs"><div class="side">${crestHTML(L,1)}<b>${esc(L.name)}</b></div><div class="v">contre</div><div class="side">${crestHTML(Rt,1)}<b>${esc(Rt.name)}</b></div></div>
       <div class="meta" style="margin-bottom:18px">Force de ${esc(opp.name)} : <span class="stars">${strStars(opp)}</span> · ${S.squad.length} joueurs sur la feuille</div>
       <div class="row" style="justify-content:center"><button class="btn go" data-act="play">Jouer le match</button><button class="btn" data-act="tab" data-v="equipe">Préparer l’équipe</button></div>
@@ -922,7 +924,7 @@ function renderTrain(){
     return;
   }
   $('#app').innerHTML=`<div class="panel"><h2>Choisis l’entraînement de la semaine</h2>
-    <p class="hint">Un seul entraînement par semaine, sous forme de mini-jeu : plus tu réussis, plus tes joueurs progressent. Attention, s’entraîner fatigue : le repos, c’est important aussi !</p>
+    <p class="hint">Un seul entraînement par semaine, sous forme de mini-jeu : plus tu réussis, plus tes joueurs progressent. Difficulté : ${DIFFN().toLowerCase()} (${LEAGUE[S.div]}). Attention, s’entraîner fatigue : le repos, c’est important aussi !</p>
     <div class="train">${['att','pass','def','gk','vit','slalom','tech','jongle','rest'].map(k=>{const t=TRAIN[k],rc=S.records||{},rec=k==='jongle'&&rc.jongle?`Record : ${rc.jongle} jongles`:k==='slalom'&&rc.slalom?`Record : ${rc.slalom} s`:'';return `<button data-act="train" data-v="${k}"><span class="em">${t.em}</span><b>${t.name}</b><span>${t.d}</span><small class="ttag">${t.stat?STATN[t.stat]:'Énergie'}${rec?' · '+rec:''}</small></button>`}).join('')}</div></div>`;
 }
 function doTrain(k,score){
@@ -1118,6 +1120,7 @@ function simMinute(M){
 }
 function tokAct(el,t){if(!el)return;const shot=/tire|frappe|arme|BUT|Tir|dévie|stroke|pousse/.test(t||''),c=shot?'swing':'push';el.classList.remove('swing','push');void el.offsetWidth;el.classList.add(c);setTimeout(()=>el.classList.remove(c),shot?520:360)}
 function applyFrame(M,f){
+  if(f.b&&!M.fast){const i=f.who?S.lineup.indexOf(f.who):-1;evPush({b:[...f.b],who:i>=0?'u'+i:(f.oi?'o'+f.oi:null),goal:f.goal||null,txt:f.t||''})}
   if(!M.fast&&f.b){const i=f.who?S.lineup.indexOf(f.who):-1;if(i>=0)tokAct(document.querySelector(`#toks [data-u="${i}"]`),f.t);else if(f.oi)tokAct(document.querySelector(`#toks [data-o="${f.oi}"]`),f.t)}
   if(f.b){M.ball=f.b;M.who=f.who||null;M.oi=f.oi||null} else if(f.who||f.oi){M.who=f.who||null;M.oi=f.oi||null}
   if(f.who)M.poss='u'; else if(f.oi)M.poss='o';
@@ -1141,7 +1144,7 @@ function loop(){
   if(f.end){M.running=false;finalize(M);return}
   if(f.half){M.running=false;ui.timer=setTimeout(()=>openBreak('half'),900);return}
   if(M.pendingReplay){const r=M.pendingReplay;M.pendingReplay=null;M.running=false;M.rec=true;
-    setTimeout(()=>{M.rec=false;playReplay({dir:1,roster:rosterMain(),title:r.title,scorerKey:r.key},()=>{celebrate(r.cry,r.nm);if(r.key){const R=rosterMain()[r.key];tokCele(document.querySelector(`#toks [data-u="${r.key.slice(1)}"]`),R&&R.celeb)}snapReset();if(ui.match===M&&!M.done){M.running=true;ui.timer=setTimeout(loop,900)}})},950);return}
+    setTimeout(()=>{M.rec=false;playReplay({dir:1,roster:rosterMain(),title:r.title,scorerKey:r.key,gkKey:'o0'},()=>{celebrate(r.cry,r.nm);if(r.key){const R=rosterMain()[r.key];tokCele(document.querySelector(`#toks [data-u="${r.key.slice(1)}"]`),R&&R.celeb)}snapReset();if(ui.match===M&&!M.done){M.running=true;ui.timer=setTimeout(loop,900)}})},950);return}
   if(f.heroMoment){M.running=false;openHero(f);return}
   if(f.pcEvent){M.running=false;openPC(f);return}
   ui.timer=setTimeout(loop,BASE_MS*f.d*SPEEDS[ui.spd][1]);
@@ -1405,13 +1408,15 @@ function openTraining(k){
   GAME={k,round:0,score:0,phase:'play',t:0,wait:0,flash:null,col:{turf:cs.getPropertyValue('--turf').trim()||'#1D5FAA',turf2:cs.getPropertyValue('--turf2').trim()||'#18528F',ball:'#FFC928',club:cs.getPropertyValue('--club').trim()||'#E0662B'},ctx:$('#mg').getContext('2d'),last:performance.now()};
   newRound(); requestAnimationFrame(gameLoop);
 }
+function mgScale(G){const d=DIFF();if(G.aimSp)G.aimSp/=d;if(G.gkSp)G.gkSp/=d;if(G.asp)G.asp/=d;if(G.csp)G.csp/=d;if(G.k==='tech'){G.zw=Math.min(160,G.zw*d);G.zx=Math.min(G.zx,500-G.zw)}if(G.tsp)G.tsp/=d;if(G.k==='gk')G.T*=d;if(G.k==='jongle'&&G.round===0&&!G.scaled){G.g/=d;G.scaled=true}if(G.k==='slalom'&&G.round===0&&!G.scaled){G.v/=d;G.scaled=true}}
 function newRound(){
   const G=GAME, r=G.round;
-  if(MG2.includes(G.k)){newRound2(G);G.phase='play';G.t=0;return}
+  if(MG2.includes(G.k)){newRound2(G);mgScale(G);G.phase='play';G.t=0;return}
   if(G.k==='att') Object.assign(G,{aim:80,aimDir:1,aimSp:260+r*45,gkSp:1.6+r*.3,shot:null});
   if(G.k==='def') Object.assign(G,{lane:G.lane??1,al:rint(0,2),ay:20,asp:140+r*28,feint:r>=1&&R()<.55,feinted:false});
   if(G.k==='vit') Object.assign(G,{light:'red',delay:1.2+R()*2,rt:null});
   if(G.k==='tech') Object.assign(G,{cur:60,cdir:1,csp:280+r*70,zw:95-r*13,zx:rint(90,470-95+r*13)});
+  mgScale(G);
   G.phase='play';G.t=0;
 }
 function endRound(ok,txt){
@@ -1427,7 +1432,7 @@ function gameInput(v){
   if(G.k==='def'&&(v==='left'||v==='right')) G.lane=clamp(G.lane+(v==='left'?-1:1),0,2);
   if(G.k==='vit'&&v==='act'){
     if(G.light==='red') endRound(false,'Faux départ !');
-    else {const ms=Math.round(G.t*1000);endRound(ms<=500,ms<=500?`Super départ : ${ms} ms !`:`Trop lent : ${ms} ms`)}
+    else {const ms=Math.round(G.t*1000),lim=Math.round(500*DIFF());endRound(ms<=lim,ms<=lim?`Super départ : ${ms} ms !`:`Trop lent : ${ms} ms`)}
   }
   if(G.k==='tech'&&v==='act'){const ok=G.cur>=G.zx&&G.cur<=G.zx+G.zw;endRound(ok,ok?'Plot passé !':'Balle perdue…')}
 }
@@ -1539,7 +1544,7 @@ function openHero(f){
 }
 function openSave(f){
   const H=heroP(), M=ui.match, num=M.oppNums[(f.n||1)-1];
-  ui.hm={type:'save',n:f.n,phase:'wait',t:0,last:performance.now(),delay:.6+R()*.9,win:clamp(.75+(H.def-50)*.012,.6,1.1),shot:R()<.36?0:R()<.45?1:2,shown:false};
+  ui.hm={type:'save',n:f.n,phase:'wait',t:0,last:performance.now(),delay:.6+R()*.9,win:clamp(.75+(H.def-50)*.012,.6,1.1)*DIFF(),shot:R()<.36?0:R()<.45?1:2,shown:false};
   const el=document.createElement('div');el.className='sheet';el.id='sheet';
   el.innerHTML=`<div class="sheetin"><div class="row" style="justify-content:space-between"><b class="who">🧤 ${esc(first(H))}</b><span class="hint" style="margin:0">⚡ ${Math.round(H.energy)}%</span></div>
     <p class="sit">Tir du n°${num} ! Plonge vers la <b style="color:var(--hot)">cible rouge</b>.</p>
@@ -1573,8 +1578,8 @@ function saveAnswer(z){
 function heroChoose(ch,stat){
   const H=heroP(), hm=ui.hm; if(!hm||hm.phase!=='choose') return;
   const risky={tir:.9,dribble:.95,passe:1.05,course:1,tacle:.9,couper:1,suivre:1.05,plonge:1,sortir:.9,ligne:1,courte:1.1,longue:.85,calme:1.15}[ch];
-  const zw=clamp((18+(H[stat]-50)*.55)*risky*(.75+.25*H.energy/100),9,34);
-  Object.assign(hm,{phase:'time',ch,zw,zx:rint(8,92-Math.round(zw)),cur:0,dir:1,sp:95+rint(0,20),last:performance.now()});
+  const zw=clamp((18+(H[stat]-50)*.55)*risky*(.75+.25*H.energy/100)*DIFF(),8,40);
+  Object.assign(hm,{phase:'time',ch,zw,zx:rint(8,92-Math.round(zw)),cur:0,dir:1,sp:(95+rint(0,20))/DIFF(),last:performance.now()});
   const label=HERO_CH[hm.type].find(c=>c[0]===ch)[1];
   $('#sheet .sheetin').innerHTML=`<p class="sit">Appuie quand le curseur est dans la zone verte !</p>
     <div class="tbar"><div class="tzone" style="left:${hm.zx}%;width:${zw}%"></div><div class="tcur" id="tcur"></div></div>
@@ -1734,7 +1739,7 @@ const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 function pcInput(v){
   const G=PCG; if(!G) return;
   if(v.startsWith('v:')&&G.phase==='choose'){G.variant=v.slice(2);pcSet('readyStop');return}
-  if(v==='go'&&G.phase==='readyStop'){SND.toc(.8);const p=G.pc.push;G.T=clamp(1.75-((p.vit+p.tech)/2-50)*.012,1.35,1.95);G.win=clamp(38+(G.pc.stop.tech-50)*.6,30,50);G.msg=null;pcSet('travel');return}
+  if(v==='go'&&G.phase==='readyStop'){SND.toc(.8);const p=G.pc.push;G.T=clamp(1.75-((p.vit+p.tech)/2-50)*.012,1.35,1.95)*Math.sqrt(DIFF());G.win=clamp(38+(G.pc.stop.tech-50)*.6,30,50)*DIFF();G.msg=null;pcSet('travel');return}
   if(v==='go'&&G.phase==='readyOut'){G.delay=1+R()*1.6;G.pushed=false;pcSet('wait');return}
   if(G.phase==='travel'&&v==='tap'){
     const d=dist(G.ball,SP), before=G.t<G.T;
@@ -1743,7 +1748,7 @@ function pcInput(v){
     const q=1-d/G.win; pcHeroMark(G.pc.stop,true); G.ball=[...SP]; SND.toc(.9);
     G.msg=q>.6?'Stop parfait !':'Bon stop !';
     if(G.variant==='defl'){G.T=1.1;G.win=clamp(34+(G.defl.tech-50)*.5,26,44);pcSet('defl')}
-    else{G.rushT=clamp(2.3+q*.8-(G.M.opp.def-55)*.02,1.8,3.3);G.rushFrom=[...G.rush];pcSet('aim')}
+    else{G.rushT=clamp(2.3+q*.8-(G.M.opp.def-55)*.02,1.8,3.3)*DIFF();G.rushFrom=[...G.rush];pcSet('aim')}
     return}
   if(G.phase==='defl'&&v==='tap'){
     const d=dist(G.ball,DP), before=G.t<G.T;
@@ -1751,7 +1756,7 @@ function pcInput(v){
     G.M.st.u.sh++; pcHeroMark(G.defl,true);
     return R()<.42?pcGoal(G.defl,`Déviation parfaite de ${first(G.defl)} au poteau !`):pcFail('Arrêté…',`${first(G.defl)} dévie… le gardien arrête du pied !`,null)}
   if(G.phase==='aim'&&v==='tap'){
-    const sh=G.pc.shoot, tx=GL[0]+8+(GL[1]-GL[0]-16)*G.aim, reach=clamp(22+(G.M.opp.gk-55)*.4,18,30);
+    const sh=G.pc.shoot, tx=GL[0]+8+(GL[1]-GL[0]-16)*G.aim, reach=clamp(22+(G.M.opp.gk-55)*.4,18,30)/DIFF();
     G.M.st.u.sh++; G.shotX=tx; G.ball=[tx,40];
     const far=Math.abs(tx-G.gkx)>reach, goal=far&&R()<clamp(.32+(sh.att-55)*.008,.25,.46)*(nPCDef()===3?1.1:1);
     pcHeroMark(sh,goal);
@@ -1801,7 +1806,7 @@ function pcLoop(t){
         G.M.st.o.sh++;const r=G.pd.d[0];
         if(!G.early&&R()<G.q*.6){pcBlock(`${first(r)} sort à fond et bloque le tir !`,r);return requestAnimationFrame(pcLoop)}
         G.shotZ=R()<.36?0:R()<.45?1:2;G.msg=null;pcSet('dive')}}}
-  if(G.phase==='dive'&&G.t>1.2&&!G.dived){G.dived=true;G.ball=[GL[0]+(GL[1]-GL[0])*(G.shotZ+.5)/3,40];pcHeroMark(G.gk,false);
+  if(G.phase==='dive'&&G.t>1.2*DIFF()&&!G.dived){G.dived=true;G.ball=[GL[0]+(GL[1]-GL[0])*(G.shotZ+.5)/3,40];pcHeroMark(G.gk,false);
     R()<.8?pcConcede(`Trop tard pour plonger : le n°${G.M.oppNums[G.n-1]} marque.`):pcSave(`Le tir passe juste au-dessus !`)}
   pcDraw(G,t); requestAnimationFrame(pcLoop);
 }
@@ -1844,7 +1849,7 @@ function pcDraw(G,t){
     c.fillStyle='#FFC928';c.beginPath();c.moveTo(tx,30);c.lineTo(tx-11,48);c.lineTo(tx+11,48);c.fill();
     G.bar={left:1-Math.min(G.t/G.rushT,1),txt:'Le défenseur arrive !'}}
   if(G.phase==='dive'){const zx=GL[0]+(GL[1]-GL[0])*(G.shotZ+.5)/3,pul=6+Math.sin(t/90)*3;c.strokeStyle='#F0456F';c.lineWidth=4;c.beginPath();c.arc(zx,38,12+pul,0,7);c.stroke();c.beginPath();c.moveTo(zx-8,38);c.lineTo(zx+8,38);c.moveTo(zx,30);c.lineTo(zx,46);c.stroke();
-    G.bar={left:Math.max(0,1-G.t/1.2),txt:'Plonge !'}}
+    G.bar={left:Math.max(0,1-G.t/(1.2*DIFF())),txt:'Plonge !'}}
   // balle
   c.beginPath();c.arc(G.ball[0],G.ball[1],7,0,7);c.fillStyle='#FFE14D';c.fill();c.lineWidth=2;c.strokeStyle='#fff';c.stroke();
   c.setTransform(1,0,0,1,0,0);
@@ -2313,6 +2318,7 @@ function duoView(){
   SND.crowd(!D.done,D.running?(D.ball[0]>75||D.ball[0]<25?1:.35):.15);
 }
 function duoApply(f){
+  if(f.b){const w=f.who;evPush({b:[...f.b],who:w?'d'+w.s+'-'+D.T[w.s].lineup.indexOf(w.id):null,goal:f.goal!=null?f.goal:null,txt:f.t||''})}
   if(f.b&&f.who){const i=D.T[f.who.s].lineup.indexOf(f.who.id);if(i>=0)tokAct(document.querySelector(`#dtoks [data-d="${f.who.s}-${i}"]`),f.t)}
   if(f.b){D.ball=f.b;D.who=f.who||null} else if(f.who) D.who=f.who;
   if(f.who) D.poss=f.who.s;
@@ -2331,7 +2337,7 @@ function duoLoop(){
   }
   const f=D.q.shift(); duoApply(f);
   if(D.pendingReplay){const r=D.pendingReplay,DD=D;D.pendingReplay=null;D.running=false;D.rec=true;duoView();
-    setTimeout(()=>{if(D)D.rec=false;playReplay({dir:r.dir,roster:rosterDuo(),title:r.title,scorerKey:r.key},()=>{celebrate(r.cry,r.nm);if(r.key){const R=rosterDuo()[r.key];tokCele(document.querySelector(`#dtoks [data-d="${r.key.slice(1)}"]`),R&&R.celeb)}snapReset();if(D===DD&&!D.done&&!D.hm&&!PD){D.running=true;D.timer=setTimeout(duoLoop,900)}})},950);return}
+    setTimeout(()=>{if(D)D.rec=false;playReplay({dir:r.dir,roster:rosterDuo(),title:r.title,scorerKey:r.key,gkKey:'d'+(r.dir>0?1:0)+'-0'},()=>{celebrate(r.cry,r.nm);if(r.key){const R=rosterDuo()[r.key];tokCele(document.querySelector(`#dtoks [data-d="${r.key.slice(1)}"]`),R&&R.celeb)}snapReset();if(D===DD&&!D.done&&!D.hm&&!PD){D.running=true;D.timer=setTimeout(duoLoop,900)}})},950);return}
   if(f.end){D.running=false;setTimeout(duoEnd,1500);return}
   if(f.hm){D.running=false;duoView();setTimeout(()=>duoAction(f.hm),350);return}
   if(f.pcDuo!=null){D.running=false;duoView();setTimeout(()=>openDuoPC(f.pcDuo),500);return}
@@ -2575,8 +2581,9 @@ document.addEventListener('pointerdown',e=>{
 });
 
 /* ---------- ralenti « 3D » : perspective caméra TV ---------- */
-const SNAP={buf:[],last:0};
-function snapReset(){SNAP.buf=[];SNAP.last=0}
+const SNAP={buf:[],last:0,ev:[]};
+function snapReset(){SNAP.buf=[];SNAP.last=0;SNAP.ev=[]}
+function evPush(e){e.t=performance.now();SNAP.ev.push(e);if(SNAP.ev.length>16)SNAP.ev.shift()}
 function snapPush(t,els,ball){
   if(!ball||t-SNAP.last<80) return; SNAP.last=t;
   SNAP.buf.push({t,b:[ball.x,ball.y],p:els.map(m=>{const d=m.el.dataset;return [d.u!=null?'u'+d.u:d.o!=null?'o'+d.o:'d'+d.d,m.x,m.y]})});
@@ -2590,7 +2597,12 @@ const RPL=55, RPW=45.7, RGZ=RPW/2, RGH=2.14, RGW=3.66;
 const toW=(x,y)=>[clamp((x-3.33)/.9333,0,100)*RPL/100, clamp((y-4)/.92,0,100)*RPW/100];
 function playReplay(o,done){
   const buf=SNAP.buf.slice(); if(buf.length<8||matchMedia('(prefers-reduced-motion: reduce)').matches){done();return}
-  const tEnd=buf[buf.length-1].t, t0=Math.max(buf[0].t,tEnd-2600);
+  const EV=SNAP.ev.slice(); let gi=-1; for(let i=EV.length-1;i>=0;i--){if(EV[i].goal!=null){gi=i;break}}
+  const G=gi>=0?EV[gi]:null; let si=gi, t0, tEnd;
+  if(G){for(let j=gi-1;j>=0&&G.t-EV[j].t<5000;j--){si=j;if(/lance l|récupère la balle et|reçoit la balle|arrive au bord|a la balle|efface/.test(EV[j].txt))break}
+    t0=Math.max(buf[0].t,EV[si].t-250); tEnd=Math.min(buf[buf.length-1].t,G.t+900)}
+  else{tEnd=buf[buf.length-1].t;t0=Math.max(buf[0].t,tEnd-2600)}
+  const spSide=clamp((tEnd-t0)/4600,.35,.8);
   const el=document.createElement('div');el.className='replay';
   el.innerHTML=`<div class="rpin"><div class="rphd"><b>🎬 RALENTI</b><span id="rpang"></span><button class="btn sm" id="rpskip">Passer ⏭</button></div><canvas id="rpc"></canvas><p class="rpsub">${esc(o.title||'')}</p></div>`;
   document.body.appendChild(el); SND.whoosh(); SND.say('Revoyons ça au ralenti !');
@@ -2598,7 +2610,7 @@ function playReplay(o,done){
   cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+'px';cv.style.height=H+'px';
   const c=cv.getContext('2d'); c.scale(dpr,dpr);
   const gx=o.dir>0?RPL:0;
-  const phases=[{name:'📺 Caméra tribune',from:t0,to:tEnd,speed:.6,cam:'side'},{name:'🥅 Derrière le but',from:Math.max(t0,tEnd-1300),to:tEnd,speed:.5,cam:'goal'}];
+  const phases=[{name:'📺 Caméra tribune',from:t0,to:tEnd,speed:+spSide.toFixed(2),cam:'side'},{name:'🥅 Derrière le but',from:Math.max(t0,G?G.t-900:tEnd-1300),to:tEnd,speed:.5,cam:'goal'}];
   const SR=o.scorerKey&&o.roster[o.scorerKey]; if(SR) phases.push({name:`🎉 ${SR.name} : ${celebName(SR.celeb)}`,from:tEnd,to:tEnd,speed:0,cam:'cele',dur:2100});
   let pi=0, pStart=null, finished=false, camX=null, ripple=null, lastB=null; const prevPos={};
   const finish=()=>{if(finished)return;finished=true;el.remove();done()};
@@ -2608,6 +2620,24 @@ function playReplay(o,done){
     const a=buf[i-1],b=buf[i],k=clamp((gt-a.t)/Math.max(1,b.t-a.t),0,1),L=(u,v)=>u+(v-u)*k;
     const pm={};a.p.forEach(([key,x,y])=>pm[key]=[x,y]);const pl=b.p.map(([key,x,y])=>{const q=pm[key]||[x,y];return [key,L(q[0],x),L(q[1],y)]});
     return {b:[L(a.b[0],b.b[0]),L(a.b[1],b.b[1])],p:pl};
+  }
+  const dirOf=k=>k&&(k[0]==='u'||k.startsWith('d0'))?1:-1;
+  const evW=e=>toW(px(e.b[0]),py(e.b[1]));
+  function stickAt(key,gt,fb){if(!key)return fb;const q=sample(gt).p.find(x=>x[0]===key);if(!q)return fb;const [X,Z]=toW(q[1],q[2]);return [X+dirOf(key)*.55,Z+.25]}
+  const gZ=RGZ+(R()*2-1)*1.25;
+  function ballAt(gt){
+    if(!G){const s=sample(gt);return [...toW(...s.b),.06]}
+    if(gt>=G.t){const p=clamp((gt-G.t)/420,0,1),a=stickAt(G.who,G.t,evW(G)),b=[gx+o.dir*.8,gZ];return [a[0]+(b[0]-a[0])*p,a[1]+(b[1]-a[1])*p,p<1?.1+Math.sin(p*Math.PI)*.5+p*.25:.3]}
+    let i=-1;for(let k=si;k<=gi;k++){if(EV[k].t<=gt)i=k}
+    if(i<0){const e=EV[si];return [...stickAt(e.who,gt,evW(e)),.06]}
+    const e=EV[i],n=EV[i+1];
+    if(!n) return [...stickAt(e.who,gt,evW(e)),.06];
+    const u=(gt-e.t)/Math.max(1,n.t-e.t);
+    if(n.who&&e.who&&n.who!==e.who){
+      if(u<.25) return [...stickAt(e.who,gt,evW(e)),.06];
+      if(u<.6){const q=(u-.25)/.35,a=stickAt(e.who,gt,evW(e)),b=stickAt(n.who,gt,evW(n));return [a[0]+(b[0]-a[0])*q,a[1]+(b[1]-a[1])*q,.06+Math.sin(q*Math.PI)*.15]}
+      return [...stickAt(n.who,gt,evW(n)),.06]}
+    const k=n.who||e.who; return [...stickAt(k,gt,evW(n)),.06];
   }
   let tgt=null;
   function lookAt(C,T,vis){const dx=T[0]-C[0],dz=T[2]-C[2],hd=Math.hypot(dx,dz),dist=Math.hypot(hd,C[1]-T[1]);return {C,th:Math.atan2(dx,dz),ph:Math.atan2(C[1]-T[1],hd),f:W*dist/vis}}
@@ -2632,7 +2662,7 @@ function playReplay(o,done){
     const ph=phases[pi]; if(pStart===null) pStart=now; const gt=ph.from+(now-pStart)*ph.speed, cel=ph.cam==='cele', celE=now-pStart;
     if(cel?celE>ph.dur:gt>ph.to+320){pi++;pStart=null;camX=null;tgt=null;ripple=null;if(pi>=phases.length){finish();return}return requestAnimationFrame(frame)}
     $('#rpang').textContent=ph.name;
-    const snap=sample(Math.min(gt,ph.to)), [bX,bZ]=toW(...snap.b), ballSp=lastB?Math.hypot(bX-lastB[0],bZ-lastB[1]):0; lastB=[bX,bZ]; const _u=0, prog=clamp((gt-ph.from)/Math.max(1,ph.to-ph.from),0,1);
+    const gtc=Math.min(gt,ph.to), snap=sample(gtc), BA=ballAt(gtc), bX=BA[0], bZ=BA[1], bH=BA[2], ballSp=lastB?Math.hypot(bX-lastB[0],bZ-lastB[1]):0; lastB=[bX,bZ]; const _u=0, prog=clamp((gt-ph.from)/Math.max(1,ph.to-ph.from),0,1);
     let scP=null; if(cel){const q=snap.p.find(x=>x[0]===o.scorerKey);if(q)scP=toW(q[1],q[2])}
     const cam=camera(ph,bX,bZ,prog,scP), P=mk(cam);
     c.fillStyle='#0d1b2c';c.fillRect(0,0,W,H);
@@ -2644,7 +2674,7 @@ function playReplay(o,done){
     c.setLineDash([8,8]);line(P,[[RPL/2,0,0],[RPL/2,0,RPW]],2,'rgba(255,255,255,.8)');c.setLineDash([]);
     [0,RPL].forEach(X=>{const dir=X?-1:1,pts=[];for(let a=0;a<=24;a++){const an=-Math.PI/2+Math.PI*a/24;pts.push([X+dir*Math.cos(an)*12,0,RGZ+Math.sin(an)*12])}line(P,pts,3,'#fff')});
     // balle : hauteur et filet
-    const dist=Math.abs(gx-bX), inGoal=dist<.6&&Math.abs(bZ-RGZ)<RGW/2+.5, h=dist<10?.55*Math.sin((1-dist/10)*Math.PI*.8)+.06:.06;
+    const inGoal=(o.dir>0?bX>=RPL:bX<=0)&&Math.abs(bZ-RGZ)<RGW/2+.4, h=bH;
     if(inGoal&&ripple==null) ripple=now; const rip=ripple!=null?(now-ripple)/600:0;
     drawGoal(P,RPL,-1,gx===RPL?rip:0); drawGoal(P,0,1,gx===0?rip:0);
     // joueurs (du plus loin au plus proche)
@@ -2662,7 +2692,9 @@ function playReplay(o,done){
       if(R.star){c.beginPath();c.ellipse(it.f[0],it.f[1],w*.6,w*.2,0,0,7);c.lineWidth=3;c.strokeStyle='#FFC928';c.stroke()}
       const pv=prevPos[it.key], spd=pv?Math.hypot(it.X-pv[0],it.Z-pv[1]):0; prevPos[it.key]=[it.X,it.Z];
       const near=Math.hypot(it.X-bX,it.Z-bZ)<1.6, legA=spd>.004?[-20,0,20,0][Math.floor(now/110+it.key.length)%4]:0;
-      const stA=near&&ballSp>.02?(ballSp>.06?30:-55):near?[-12,10][Math.floor(now/160)%2]:0;
+      let stA=near?[-12,10][Math.floor(now/160)%2]:0; if(G&&it.key===G.who&&gtc>G.t-300&&gtc<G.t+220) stA=gtc<G.t?-65:35;
+      if(G&&it.key===o.gkKey&&gtc>G.t+80&&!cel){const im=spr({...R.o,pose:{l:20}}),k=Math.min(1,(gtc-G.t-80)/260),dd=gZ>RGZ?-1:1,f2=P(it.X,0,it.Z+dd*1.1*k);
+        if(f2&&im.complete&&im.naturalWidth){c.save();c.translate(f2[0],f2[1]-hpx*.25*k);c.rotate(dd*1.25*k*(o.dir>0?1:-1));c.drawImage(im,-w/2,-hpx*(1-.25*k),w,hpx);c.restore()}return}
       if(cel&&it.key===o.scorerKey){celeD=[spr(R.o),it.f[0],it.f[1],w,hpx,R.celeb,R.o.color];return}
       const im=spr({...R.o,pose:{l:cel?0:legA,s:cel?0:stA}}); if(im.complete&&im.naturalWidth) c.drawImage(im,it.f[0]-w/2,it.f[1]-hpx,w,hpx);
       if(R.star&&hpx>18){c.font='700 12px "Baloo 2",sans-serif';c.textAlign='center';c.fillStyle='#FFC928';c.fillText('⭐ '+R.name,it.f[0],it.f[1]-hpx-4)}
