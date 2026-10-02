@@ -2813,7 +2813,7 @@ function openLook(){
   const m=$('#modal'); m.hidden=false; const keepScroll=m.querySelector('.lkpanel')?m.querySelector('.lkpanel').scrollTop:0, sameTab=m.dataset.ltab===tab;
   m.innerHTML=`<div class="box mid fit lookbox" role="dialog" aria-modal="true" aria-label="Personnaliser">
    <div class="lkhead"><div class="lkprev">${figSVG({...base,look:L})}</div>${STYLE==='manga'?`<div class="lkprevface">${capPortrait({...base,look:L})}</div>`:''}<div class="lkprevside">${figSVG({...base,look:L,view:'side',pose:STYLE==='manga'?{ph:2,a:1,m:'c',d:0}:{l:18}})}</div>
-     <div class="lkside"><b>${esc(first(H))}</b><div class="seg sm"><button data-act="gstyle" data-v="classic" aria-pressed="${STYLE==='classic'}">🖍️</button><button data-act="gstyle" data-v="manga" aria-pressed="${STYLE==='manga'}">⚡ Manga</button></div><button class="btn sm" data-act="lookrand">🎲 Au hasard</button><button class="btn go sm" data-act="closeinfo">OK</button></div></div>
+     <div class="lkside"><b>${esc(first(H))}</b><div class="seg sm"><button data-act="gstyle" data-v="classic" aria-pressed="${STYLE==='classic'}">🖍️ Classique</button><button data-act="gstyle" data-v="manga" aria-pressed="${STYLE==='manga'}">⚡ Manga</button></div><button class="btn sm" data-act="lookrand">🎲 Au hasard</button><button class="btn go sm" data-act="closeinfo">OK</button></div></div>
    <div class="lktabs" role="tablist">${TABS.map(([k,ic,n])=>`<button role="tab" aria-selected="${tab===k}" data-act="looktab" data-v="${k}"><span>${ic}</span>${n}</button>`).join('')}</div>
    <div class="lkpanel">${T[tab]()}</div></div>`;
   m.dataset.ltab=tab; if(sameTab){const pn=m.querySelector('.lkpanel');if(pn)pn.scrollTop=keepScroll}
@@ -4318,7 +4318,7 @@ document.addEventListener('click',e=>{
   else if(a==='pclive'){S.pcLive=v==='1';save();refreshEditor()}
   else if(a==='slot-sw'){switchSlot(v)}
   else if(a==='pview'){ui.pview=v;render()}
-  else if(a==='gstyle'){setStyle(v);L3.roster=null;render();if($('.lookbody'))openLook();toast(v==='manga'?'⚡ Style manga activé':'🖍️ Style classique activé')}
+  else if(a==='gstyle'){if(STYLE===v)return;const inLook=!!$('.lookbox');setStyle(v);L3.roster=null;render();if(inLook)openLook();toast(v==='manga'?'⚡ Style manga activé':'🖍️ Style classique activé')}
   else if(a==='order'){giveOrder(v)}
   else if(a==='chant'){openChant()}
   else if(a==='crec'){recChant()}
