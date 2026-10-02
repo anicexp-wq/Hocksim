@@ -721,6 +721,32 @@ body.inmatch{overflow:hidden}
 .af-txt small{display:inline-block;margin-top:8px;background:#fff;border:3px solid #000;border-radius:999px;padding:4px 14px;font-weight:800;font-size:15px;color:#000}
 .af-stars{position:absolute;top:18%;left:0;right:0;text-align:center;font-size:40px;color:#fff;text-shadow:0 0 12px #FFD21F;animation:ciPop .4s .15s both}
 @media (prefers-reduced-motion:reduce){.actfx *{animation:none!important}}
+.ccard.bois{background:repeating-linear-gradient(100deg,#7a4e28 0 6px,#8f5e33 6px 11px,#6c4322 11px 14px)}
+.ccard.pierre{background:radial-gradient(circle at 30% 30%,#a7a9ac 0 10%,transparent 11%),radial-gradient(circle at 70% 60%,#8d8f93 0 12%,transparent 13%),linear-gradient(145deg,#6f7276,#b9bcc0 50%,#5f6266)}
+.ccard.fer{background:linear-gradient(145deg,#3d4652,#8c98a6 45%,#2f3742)}
+.ccard.platine{background:linear-gradient(145deg,#9fc7d1,#f2fbff 45%,#8fb6c2)}
+.ccard.emeraude{background:linear-gradient(145deg,#0f6b46,#5fe3a1 45%,#0b5a3a)}
+.ccard.saphir{background:linear-gradient(145deg,#123a8f,#6fa8ff 45%,#0d2c6e)}
+.ccard.rubis{background:linear-gradient(145deg,#8a0f25,#ff5a78 45%,#6d0a1c)}
+.ccard.diamant{background:linear-gradient(145deg,#bfe9ff,#ffffff 40%,#a7d8f0 60%,#ffffff);animation:tShine 2.5s linear infinite;background-size:200% 200%}
+.ccard.anormal{background:linear-gradient(145deg,#00ff9c,#ff00e6 50%,#00b3ff);animation:tGlitch 1.6s steps(2) infinite}
+.ccard.elite{background:linear-gradient(145deg,#111,#3a3a3a 40%,#111),#111;border:3px solid #d4af37;color:#f5d77a}
+.ccard.champion{background:linear-gradient(145deg,#4b1d7a,#d4af37 50%,#4b1d7a)}
+.ccard.historique{background:radial-gradient(circle,#f3e2b5,#c9a66b 70%,#8a6a3a);border:3px double #5a3b16;filter:sepia(.25)}
+.ccard.mythique{background:radial-gradient(circle at 50% 40%,#c18cff,#4a1a8a 70%,#1c0638);animation:tPulse 2s ease-in-out infinite;color:#fff}
+.ccard.monstre{background:linear-gradient(0deg,#ff3b00,#7a0000 40%,#120000);background-size:100% 200%;animation:tFlame 1.2s ease-in-out infinite alternate;color:#fff}
+.ccard.dieu{background:radial-gradient(circle at 50% 30%,#ffffff,#fff3b0 35%,#ffd23f 65%,#b8860b);animation:tHalo 2s ease-in-out infinite}
+.ccard.invincible{background:conic-gradient(from var(--ha,0deg),#ff004c,#ff9a00,#fff200,#00ff8c,#00c3ff,#7a00ff,#ff004c);animation:holo 2s linear infinite,tHalo 1.4s ease-in-out infinite;border:3px solid #000;color:#000}
+.ccard.anormal .cf,.ccard.mythique .cf,.ccard.monstre .cf,.ccard.elite .cf{color:inherit}
+@keyframes tShine{from{background-position:0 0}to{background-position:200% 200%}}
+@keyframes tGlitch{0%{filter:hue-rotate(0)}50%{filter:hue-rotate(160deg) contrast(1.3)}100%{filter:hue-rotate(320deg)}}
+@keyframes tPulse{50%{box-shadow:0 0 18px 4px #b06bff}}
+@keyframes tFlame{to{background-position:0 100%;box-shadow:0 0 16px 3px #ff3b00}}
+@keyframes tHalo{50%{box-shadow:0 0 22px 6px #ffe680}}
+.tierlist{margin:4px 0}.tierlist summary{cursor:pointer;font-weight:700}
+.tierlist div{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.tchip{padding:3px 8px;border-radius:8px;font-size:12px;font-weight:800;border:1.5px solid #000;color:#fff;text-shadow:0 1px 2px #000}.tchip small{font-weight:600;opacity:.9}
+@media (prefers-reduced-motion:reduce){.ccard{animation:none!important}}
 </style>
 </head>
 <body>
@@ -2696,6 +2722,8 @@ const BADGES=[
  ['duel','🤝','Fair-play','Jouer un match amical à 2'],
  ['style','🎨','Look d’enfer','Personnaliser son joueur'],
  ['card_gold','🃏','Carte en or','Obtenir une carte Or'],
+ ['card_leg','🌈','Carte de légende','Obtenir une carte Légende ou plus'],
+ ['card_inv','♾️','Invincible','Obtenir une carte Invincible (niveau 20)'],
  ['celeb','🎉','Showman','Choisir sa célébration de but'],
  ['une','📰','À la une','Le joueur ⭐ fait la une de la Gazette'],
  ['nat','🇧🇪','Sélectionné','Jouer avec la sélection nationale'],
@@ -3577,18 +3605,20 @@ function drawCele(c,im,fx,fy,w,h,e,type,dir,col){
 }
 
 /* ---------- cartes à collectionner ---------- */
-const TIERS=[['bronze','Bronze',0],['argent','Argent',15],['or','Or',40],['legende','Légende',90]];
+const TIERS=[['bois','Bois',0,'🪵'],['pierre','Pierre',6,'🪨'],['bronze','Bronze',12,'🥉'],['fer','Fer',20,'⚙️'],['argent','Argent',30,'🥈'],['or','Or',42,'🥇'],['platine','Platine',56,'💿'],['emeraude','Émeraude',72,'💚'],['saphir','Saphir',90,'💙'],['rubis','Rubis',110,'❤️'],
+ ['diamant','Diamant',135,'💎'],['anormal','Anormal',165,'👾'],['elite','Élite',200,'🎖️'],['champion','Champion',240,'🏆'],['historique','Historique',290,'📜'],['mythique','Mythique',350,'🔮'],['legende','Légende',420,'🌈'],['monstre','Monstre',500,'👹'],['dieu','Dieu',600,'⚡'],['invincible','Invincible',720,'♾️']];
+const tierIdx=k=>TIERS.findIndex(x=>x[0]===k);
 function cardPts(p){const c=p.career||{};return ((c.goals||0)+p.goals)*3+((c.motm||0)+p.motm)*5+(c.apps||0)+p.apps+(S.heroMode&&p.id===S.hero?lvlOf(p)*3+((S.natStats&&S.natStats.apps)||0)*4+((S.natStats&&S.natStats.medals.filter(m=>m.m==='🥇').length)||0)*15:0)}
 function tierOf(p){const pts=cardPts(p);let t=TIERS[0];TIERS.forEach(x=>{if(pts>=x[2])t=x});return t}
 function checkCards(silent){
   S.cardTier=S.cardTier||{};
   S.players.forEach(p=>{const t=tierOf(p),prev=S.cardTier[p.id];
-    if(!silent&&prev&&TIERS.findIndex(x=>x[0]===t[0])>TIERS.findIndex(x=>x[0]===prev)){toast(`🃏 Carte ${t[1]} débloquée : ${p.name} !`);SND.ding();if(t[0]==='or'||t[0]==='legende')unlock('card_gold')}
+    if(!silent&&prev&&tierIdx(t[0])>tierIdx(prev)){toast(`${t[3]} Carte ${t[1]} débloquée : ${p.name} ! (niveau ${tierIdx(t[0])+1}/20)`);SND.ding();if(tierIdx(t[0])>=tierIdx('or'))unlock('card_gold');if(tierIdx(t[0])>=tierIdx('legende'))unlock('card_leg');if(t[0]==='invincible'){unlock('card_inv');celebrate('CARTE INVINCIBLE !','')}}
     S.cardTier[p.id]=t[0]});
 }
 function cardFront(p){
   const t=tierOf(p), fig={...figOf(p),gk:p.pos==='G'};
-  return `<div class="cf"><div class="ctop"><span class="covr">${ovr(p)}</span><span class="cpos">${p.pos}</span><span class="ctier">${t[1]}</span></div>
+  return `<div class="cf"><div class="ctop"><span class="covr">${ovr(p)}</span><span class="cpos">${p.pos}</span><span class="ctier">${t[3]} ${t[1]}</span></div>
     <div class="cav">${figSVG(fig)}</div>
     <div class="cname">${S.heroMode&&p.id===S.hero?'⭐ ':''}${esc(p.name)}</div>
     <div class="cnum">#${p.num} · ${esc(POS[p.pos])}</div>
@@ -3598,12 +3628,12 @@ function cardFront(p){
 function cardHTML(p){return `<button class="ccard ${tierOf(p)[0]}" data-act="card" data-id="${p.id}" aria-label="Carte de ${esc(p.name)}">${cardFront(p)}</button>`}
 function albumHTML(){
   const list=[...S.players].sort((a,b)=>cardPts(b)-cardPts(a));
-  const cnt=k=>list.filter(p=>tierOf(p)[0]===k).length;
-  return `<p class="hint" style="margin:0 0 10px">🥉 ${cnt('bronze')} bronze · 🥈 ${cnt('argent')} argent · 🥇 ${cnt('or')} or · 🌈 ${cnt('legende')} légende. Les cartes s’améliorent avec les buts, les matchs et les titres de joueur du match.</p>
+  const cnt=k=>list.filter(p=>tierOf(p)[0]===k).length, have=TIERS.filter(t=>cnt(t[0]));
+  return `<p class="hint" style="margin:0 0 6px">${have.map(t=>`${t[3]} ${cnt(t[0])} ${t[1].toLowerCase()}`).join(' · ')}</p><details class="tierlist"><summary>Les 20 niveaux de cartes</summary><div>${TIERS.map((t,i)=>`<span class="tchip" style="background:${['#7a4e28','#7d8084','#a0672f','#4a5562','#9aa5b1','#c9971a','#8fb6c2','#178a5a','#2059c9','#c21d3f','#6fb6d8','#c400b8','#222','#6a2fa0','#8a6a3a','#5a1fa0','#d06fd0','#8a0000','#c99a00','#000'][i]}">${i+1}. ${t[3]} ${t[1]} <small>${t[2]} pts</small></span>`).join('')}</div></details><p class="hint" style="margin:6px 0 10px">Les cartes montent avec les buts, les matchs, les titres de joueur du match (et le niveau du joueur ⭐).</p>
    <div class="album">${list.map(cardHTML).join('')}</div>`;
 }
 function openCard(id){
-  const p=byId(id), t=tierOf(p), c=p.career||{}, pts=cardPts(p), nx=TIERS.find(x=>x[2]>pts);
+  const p=byId(id), t=tierOf(p), c=p.career||{}, pts=cardPts(p), nx=TIERS.find(x=>x[2]>pts); t.lvl=tierIdx(t[0])+1;
   const m=$('#modal'); m.hidden=false;
   m.innerHTML=`<div class="cardview" role="dialog" aria-modal="true" aria-label="Carte de ${esc(p.name)}">
    <div class="flip" id="flip"><div class="ccard big ${t[0]} face">${cardFront(p)}</div>
@@ -3614,7 +3644,7 @@ function openCard(id){
    <p class="hint" style="color:#fff;text-align:center;margin:12px 0 8px">Touche la carte pour la retourner</p>
    <div class="row" style="justify-content:center"><button class="btn go" data-act="closeinfo">Fermer</button></div></div>`;
   m.querySelector('#flip').addEventListener('click',e=>e.currentTarget.classList.toggle('flipped'));
-  if(t[0]==='or'||t[0]==='legende') SND.ding();
+  if(tierIdx(t[0])>=tierIdx('or')) SND.ding();
 }
 
 /* ---------- La Gazette : une de journal après chaque match ---------- */
@@ -4063,7 +4093,7 @@ function trophyItems(){
   return it;
 }
 function openTrophies(){
-  const it=trophyItems(), P=S.palmares||[], R=S.records||{}, legends=S.players.filter(p=>['or','legende'].includes(tierOf(p)[0]));
+  const it=trophyItems(), P=S.palmares||[], R=S.records||{}, legends=S.players.filter(p=>tierIdx(tierOf(p)[0])>=tierIdx('or')).sort((a,b)=>cardPts(b)-cardPts(a));
   const topSc=P.filter(r=>r.top).sort((a,b)=>b.top.n-a.top.n)[0], bw=S.bigWin, H=heroP(), nb=Object.keys(S.badges||{}).length;
   const shelf=(title,items,empty)=>`<div class="shelf"><h3>${title}</h3><div class="shelfrow">${items.length?items.join(''):`<p class="hint" style="margin:6px 4px">${empty}</p>`}</div><div class="plank"></div></div>`;
   const cup=x=>`<div class="troph${x.gold?' gold':''}"><span class="ti">${x.ic}</span><b>${esc(x.t)}</b><small>${esc(x.s)}</small></div>`;
@@ -4082,7 +4112,7 @@ function openTrophies(){
    <div class="tropin">
     ${shelf('🏆 Titres et coupes',it.map(cup),'Pas encore de trophée : gagne un championnat, une coupe ou une médaille pour remplir cette étagère !')}
     ${shelf('📜 Records du club',records.map(x=>x),'Les records apparaîtront au fil des matchs et des entraînements.')}
-    ${shelf('🃏 Cartes Or et Légende',legends.map(p=>`<div class="troph card"><span class="ti">${tierOf(p)[0]==='legende'?'🌈':'🥇'}</span><b>${esc(p.name)}</b><small>Carte ${tierOf(p)[1]}</small></div>`),'Aucune carte Or pour l’instant : les buts et les matchs font monter les cartes.')}
+    ${shelf('🃏 Cartes Or et plus',legends.map(p=>`<div class="troph card"><span class="ti">${tierOf(p)[3]}</span><b>${esc(p.name)}</b><small>Carte ${tierOf(p)[1]}</small></div>`),'Aucune carte Or pour l’instant : les buts et les matchs font monter les cartes.')}
     ${shelf('🏅 Badges',BADGES.filter(b=>(S.badges||{})[b[0]]).map(b=>`<div class="troph badge"><span class="ti">${b[1]}</span><b>${esc(b[2])}</b><small>Saison ${(S.badges[b[0]]||{}).s||'?'}</small></div>`),'Aucun badge pour l’instant.')}
    </div></div>`;
   SND.ding();
