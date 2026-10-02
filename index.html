@@ -1582,6 +1582,13 @@ function simMinute(M){
   const bo=M.boost>0?1.08:1; if(M.boost>0)M.boost--;
   const up=(M.pen.u>0?.85:1)*bo, op=M.pen.o>0?.85:1; if(M.pen.u>0)M.pen.u--; if(M.pen.o>0)M.pen.o--;
   const OM=ordMods(M), ctrl=clamp(U.mid*up/(U.mid*up+O.mid*op)+(M.home?.02:-.02)+OM.ctrl,.2,.85);
+  const tail=()=>{
+  S.squad.filter(id=>!S.lineup.includes(id)).forEach(id=>{const b=byId(id);b.energy=Math.min(100,b.energy+.9)});
+  const dr=PRESS[S.press].drain*.6*OM.drain;
+  slots().forEach(([role],i)=>{const p=byId(S.lineup[i]);p.energy=Math.max(0,p.energy-dr*(role==='G'?.3:role==='D'?.85:1.1));M.played[p.id]=(M.played[p.id]||0)+1});
+  if(M.min===HALF) fr([50,50],`Mi-temps : ${M.us} - ${M.them}. 5 minutes de pause.`,'info',1,{half:true});
+  if(M.min>=MATCH_MIN){M.done=true;fr([50,50],`Coup de sifflet final : ${M.us} - ${M.them} !`,'info',1,{end:true})}
+  return F};
   const F=[], fr=(b,t,c,d,x={})=>F.push(Object.assign({b,t,c,d,min:M.min},x));
   const cardCheck=(side,name)=>{const c=R();
     if(c<.07){M.pen[side]=2;st[side].c++;fr(null,`Carton vert pour ${name} : 2 minutes hors du terrain.`,'card',1.2)}
@@ -1593,7 +1600,11 @@ function simMinute(M){
     /* ---- attaque de mon équipe ---- */
     const a=pick(onField()), p=pickScorer();
     fr(uPos(a.id,60),`${first(a)} lance l’attaque.`,'',.9,{who:a.id});
-    if(p!==a) fr([72,y],pick([`Belle passe vers ${first(p)} !`,`${first(p)} accélère le long de la ligne.`,`${first(p)} dribble un adversaire…`]),'',.9,{who:p.id});
+    if(p!==a) fr([72,y],pick([`Belle passe vers ${first(p)} !`,`${first(p)} accélère le long de la ligne.`,`${first(p)} dribble un adversaire…`,`Une-deux entre ${first(a)} et ${first(p)} !`,`Renversement de jeu vers ${first(p)} !`,`${first(a)} décale ${first(p)} sur l’aile.`]),'',.9,{who:p.id});
+    if(!M.fast&&R()<.1){const ly=rint(30,70);fr([68,ly],`${first(p)} tente sa chance de loin !`,'',.9,{who:p.id});st.u.sh++;
+      if(R()<.4){M.us++;M.scorers.push(p.id);fr([97,50],`${first(p)} frappe de loin… la balle finit au fond !`,'goal',2,{who:p.id,goal:'u'})}
+      else fr([95,ly<50?20:80],`${first(p)} frappe de loin… à côté.`,'',1.2,{who:p.id});
+      return tail()}
     fr(circlePt(1,y),`${first(p)} entre dans le cercle…`,'',.9,{who:p.id});
     const k=R();
     if(k<.42){
@@ -1629,7 +1640,11 @@ function simMinute(M){
   } else if(r<eU+eO){
     /* ---- attaque adverse ---- */
     const n=rint(1,NB-1), num=M.oppNums[n-1];
-    fr(oPos(n,40),`${o.name} récupère la balle et attaque.`,'',.9,{oi:n});
+    fr(oPos(n,40),pick([`${o.name} récupère la balle et attaque.`,`${o.name} combine en une-deux et attaque.`,`${o.name} renverse le jeu et attaque.`]),'',.9,{oi:n});
+    if(!M.fast&&R()<.08){const ly=rint(30,70);fr([32,ly],`Le n°${num} tente sa chance de loin !`,'',.9,{oi:n});st.o.sh++;
+      if(R()<.4){M.them++;fr([3,50],`Le n°${num} frappe de loin… la balle finit au fond !`,'bad',2,{oi:n,goal:'o'})}
+      else fr([5,ly<50?20:80],`Le n°${num} frappe de loin… à côté.`,'',1.2,{oi:n});
+      return tail()}
     fr(circlePt(-1,y),`Le n°${num} entre dans notre cercle…`,'',.9,{oi:n});
     const k=R();
     if(k<.4){
@@ -1684,12 +1699,7 @@ function simMinute(M){
       fr(oPos(j,nb),R()<.25?`${o.name} fait tourner la balle, on reste bien placés.`:null,'',.55,{oi:j});
     }
   }
-  S.squad.filter(id=>!S.lineup.includes(id)).forEach(id=>{const b=byId(id);b.energy=Math.min(100,b.energy+.9)});
-  const dr=PRESS[S.press].drain*.6*OM.drain;
-  slots().forEach(([role],i)=>{const p=byId(S.lineup[i]);p.energy=Math.max(0,p.energy-dr*(role==='G'?.3:role==='D'?.85:1.1));M.played[p.id]=(M.played[p.id]||0)+1});
-  if(M.min===HALF) fr([50,50],`Mi-temps : ${M.us} - ${M.them}. 5 minutes de pause.`,'info',1,{half:true});
-  if(M.min>=MATCH_MIN){M.done=true;fr([50,50],`Coup de sifflet final : ${M.us} - ${M.them} !`,'info',1,{end:true})}
-  return F;
+  return tail();
 }
 function tokAct(el,t){if(!el)return;const shot=/tire|frappe|arme|BUT|Tir|dévie|stroke|pousse/.test(t||''),tk=!shot&&/intercept|récupère|[Tt]acle|bloque|vole la balle|sort à fond/.test(t||''),c=shot?'swing':tk?'tackle':'push';el.classList.remove('swing','push','tackle');void el.offsetWidth;el.classList.add(c);setTimeout(()=>el.classList.remove(c),shot?520:tk?450:360)}
 function applyFrame(M,f){
@@ -1710,7 +1720,8 @@ function applyFrame(M,f){
     if(!M.ciWin&&M.min>=MATCH_MIN-4&&M.dus===M.dthem&&sc&&ciOK(M)){M.ciWin=true;M.pendingCut={o:figOf(sc),txt:'BUT DE LA VICTOIRE !',line:`${first(sc)} : C’est pour l’équipe !`}}
     else if(sc&&sc.id===S.hero&&M.h.g===3&&!M.ciHat&&ciOK(M)){M.ciHat=true;M.pendingCut={o:figOf(sc),txt:'TRIPLÉ !!',line:`${first(sc)} : Et de trois !`}}}
   if(!M.fast){if(f.goal==='u'){setTimeout(()=>chantNow(true),1600);const sc=f.who?byId(f.who):null;SND.goal();if(sc&&sc.look&&sc.look.voice)setTimeout(()=>SND.playVoice(sc.look.voice),250);else SND.say(sc?`But de ${first(sc)} !`:'But !',true)}else if(f.goal==='o'){SND.oppGoal();SND.say(`But pour ${M.opp.name}.`,true)}else sndFrame(f)}
-  if(f.b&&f.goal==null)M.prevB=f.b;
+  if(f.t&&/[Cc]orner court pour/.test(f.t))M.prevB=null;
+  if(f.b&&f.goal==null&&!/[Cc]orner court/.test(f.t||''))M.prevB=f.b;
   if(f.goal==='u')M.dus++; if(f.goal==='o')M.dthem++;
   if(f.t) say(f.min,f.t,f.c);
   M.shownMin=f.min; updateMatchView();
@@ -2107,12 +2118,13 @@ document.addEventListener('keydown',e=>{if(!GAME)return;const k=(GAME.k==='gk'?{
 
 /* ---------- mode joueur : on incarne un joueur (Ereor) ---------- */
 const HERO_CH={
- att:[['tir','Tirer','att'],['dribble','Dribbler','tech'],['passe','Passer','tech']],
- mid:[['passe','Passe en profondeur','tech'],['dribble','Dribbler','tech'],['course','Accélérer','vit']],
+ att:[['tir','Tirer','att'],['dribble','Dribbler','tech'],['passe','Passer','tech'],['unedeux','Une-deux','tech']],
+ mid:[['passe','Passe en profondeur','tech'],['dribble','Dribbler','tech'],['course','Accélérer','vit'],['unedeux','Une-deux','tech'],['renvers','Renversement','tech']],
  def:[['tacle','Tacler','def'],['couper','Couper la passe','def'],['suivre','Rester devant lui','vit']],
  save:[['plonge','Plonger','def'],['sortir','Sortir au-devant','vit']],
  sortie:[['sortir','Sortir dans ses pieds','vit'],['ligne','Rester sur ta ligne','def']],
- relance:[['courte','Relance courte','tech'],['longue','Relance longue','att'],['calme','Temporiser','def']]
+ relance:[['courte','Relance courte','tech'],['longue','Relance longue','att'],['calme','Temporiser','def']],
+ call:[['cercle','Appel dans le cercle','att'],['prof','Appel en profondeur','vit'],['soutien','Appel en soutien','tech']]
 };
 const OBJ={g:['Marque un but',1],a:['Fais une passe décisive',1],ok:['Réussis 3 actions',3],rec:['Récupère 2 balles',2],sv:['Fais 3 arrêts',3]};
 const heroP=()=>S.hero?byId(S.hero):null;
@@ -2121,9 +2133,10 @@ const heroRole=()=>slots()[S.lineup.indexOf(S.hero)][0];
 const xpFor=L=>50*L*(L-1);
 const lvlOf=p=>{let L=1;while((p.xp||0)>=xpFor(L+1))L++;return L};
 function heroMoment(M,ctrl,fr){
-  if(!heroOn()||M.fast||M.min===HALF||R()>.16) return false;
+  if(!heroOn()||M.fast||M.min===HALF||R()>.27) return false;
   const H=heroP(), role=heroRole(), atk=R()<ctrl;
-  const type=role==='G'?(atk?(R()<.6?'relance':null):(R()<.6?'save':'sortie')):atk?(role==='A'?'att':'mid'):'def';
+  let type=role==='G'?(atk?(R()<.6?'relance':null):(R()<.6?'save':'sortie')):atk?(role==='A'?'att':'mid'):'def';
+  if(atk&&role!=='G'&&R()<.4){const c=pick(onField().filter(x=>x.id!==H.id&&x.pos!=='G'));if(c){const y=rint(28,72);fr([role==='A'?62:50,y],`${first(c)} a la balle… ${first(H)} peut faire un appel de balle !`,'hero',.9,{who:c.id,heroMoment:'call',n:rint(1,NB-1),carrier:c.id});return true}}
   if(!type) return false;
   const n=rint(1,NB-1), hp=uPos(H.id,atk?(role==='A'?75:58):35), num=M.oppNums[n-1];
   const txt={att:`${first(H)} arrive au bord du cercle, un défenseur devant lui…`,mid:`${first(H)} reçoit la balle au milieu du terrain.`,
@@ -2136,13 +2149,13 @@ function inCircle2D(x,y,dir=1){const X=(dir>0?x:100-x)*RPL/100,Z=y*RPW/100;retur
 /* un point bien à l'intérieur du cercle (dir 1 : but de droite, -1 : but de gauche) */
 function circlePt(dir,y){const r=6.5+R()*4,dz=clamp((y-50)*RPW/100,-r*.8,r*.8),X=RPL-Math.sqrt(r*r-dz*dz),x=X/RPL*100,yy=(RGZ+dz)/RPW*100;return [dir>0?x:100-x,yy]}
 /* garde-fou : un but marqué depuis l'extérieur du cercle est refusé */
-function refuseOutside(st,f,dir,undo){if(!f.goal&&f.goal!==0||f.valid)return false;const pb=st.prevB;if(!pb||inCircle2D(pb[0],pb[1],dir))return false;
-  undo();f.goal=null;f.c='foul';f.t='⛔ But refusé ! Le tir est parti en dehors du cercle : au hockey, il faut tirer depuis le cercle.';SND.whistle(2);return true}
+function refuseOutside(st,f,dir,undo){if(!f.goal&&f.goal!==0||f.valid||/corner court|stroke/i.test(f.t||''))return false;const pb=st.prevB;if(!pb||inCircle2D(pb[0],pb[1],dir))return false;
+  undo();f.goal=null;f.c='foul';f.t='❌ BUT ANNULÉ (tir en dehors du cercle) : au hockey, il faut tirer depuis le cercle.';f.annul=true;SND.whistle(2);if(typeof onoPush==='function'){const X=dir>0?RPL-1:1;onoPush('ANNULÉ !',X,RGZ,true)}return true}
 /* feuille d'action en bas de l'écran */
 function openHero(f){
   if(f.heroMoment==='save'){const sp=heroSpec();if(specReady(ui.match)&&sp&&sp.t==='save'){ui.hm={type:'save',n:f.n,phase:'choose',f};const el=document.createElement('div');el.className='sheet';el.id='sheet';el.innerHTML=`<div class="sheetin"><b class="who">🧤 ${esc(first(heroP()))}</b><p class="sit">Tir adverse ! Ton coup spécial est prêt.</p><div class="choices"><button class="btn spec" data-hero="specsave" data-s="def">${sp.ic} ${esc(sp.name)}<small>Coup spécial</small></button><button class="btn" data-hero="normalsave" data-s="def">Plonger normalement<small>Défense ${heroP().def}</small></button></div></div>`;document.body.appendChild(el);SND.ding();sheetReserve();return}return openSave(f)}
-  const H=heroP(); ui.hm={type:f.heroMoment,n:f.n,phase:'choose',inside:f.heroMoment!=='att'||!f.b||inCircle2D(f.b[0],f.b[1])};
-  const sit={att:'Tu es au bord du cercle. Que fais-tu ?',mid:'Tu as la balle au milieu. Que fais-tu ?',def:'Un attaquant fonce vers toi. Que fais-tu ?',save:'Tir adverse ! Que fais-tu ?',sortie:'Un attaquant arrive seul face à toi ! Que fais-tu ?',relance:'Tu as la balle. Comment relances-tu ?'}[f.heroMoment];
+  const H=heroP(); ui.hm={type:f.heroMoment,n:f.n,carrier:f.carrier,phase:'choose',inside:f.heroMoment!=='att'||!f.b||inCircle2D(f.b[0],f.b[1])};
+  const sit={att:'Tu es au bord du cercle. Que fais-tu ?',mid:'Tu as la balle au milieu. Que fais-tu ?',def:'Un attaquant fonce vers toi. Que fais-tu ?',save:'Tir adverse ! Que fais-tu ?',sortie:'Un attaquant arrive seul face à toi ! Que fais-tu ?',relance:'Tu as la balle. Comment relances-tu ?',call:'Ton coéquipier a la balle. Où fais-tu ton appel ?'}[f.heroMoment];
   const el=document.createElement('div');el.className='sheet';el.id='sheet';
   el.innerHTML=`<div class="sheetin"><div class="row" style="justify-content:space-between"><b class="who">⭐ ${esc(first(H))}</b><span class="hint" style="margin:0">⚡ ${Math.round(H.energy)}%</span></div>
     <p class="sit">${esc(f.heroMoment==='att'&&!ui.hm.inside?'Tu es juste devant le cercle (dehors !). Un tir d’ici ne compte que s’il est dévié dans le cercle. Entre dans le cercle en dribblant ?':sit)}</p><div class="choices">${(()=>{const sp=heroSpec();return specReady(ui.match)&&sp&&specFits(sp.k,f.heroMoment,ui.hm.inside)?`<button class="btn spec" data-hero="spec" data-s="${sp.t==='def'?'def':sp.k==='tornade'||sp.k==='meteore'?'att':'tech'}">${sp.ic} ${esc(sp.name)}<small>Coup spécial</small></button>`:specReady(ui.match)&&sp&&(sp.k==='tornade'||sp.k==='meteore')&&f.heroMoment!=='def'?`<p class="hint" style="grid-column:1/-1;margin:0">${sp.ic} Entre dans le cercle pour déclencher « ${esc(sp.name)} » !</p>`:''})()}${HERO_CH[f.heroMoment].map(([k,l,s])=>`<button class="btn" data-hero="${k}" data-s="${s}">${k==='tir'&&!ui.hm.inside?'Tirer de loin':l}<small>${STATN[s]} ${H[s]}</small></button>`).join('')}</div></div>`;
@@ -2193,7 +2206,7 @@ function heroChoose(ch,stat){
   if((ch==='dribble')&&(hm.type==='att'||hm.type==='mid')){dribbleQTE(hm);return}
   if(ch==='normalsave'){const f=hm.f;closeSheet();openSave(f);return}
   if(ch==='specsave'){const M=ui.match,sp=heroSpec();hm.phase='done';M.hs=0;const {F}=specFrames(M,hm,sp);closeSheet();cutIn(figOf(H),false,`${first(H)} : Rien ne passera !`,()=>{M.q=F.concat(M.q);M.running=true;loop()},{ono:sp.name.toUpperCase()+' !',noEnd:true,aura:sp.col,fx:fxRec(sp)});return}
-  const risky={tir:.9,dribble:.95,passe:1.05,course:1,tacle:.9,couper:1,suivre:1.05,plonge:1,sortir:.9,ligne:1,courte:1.1,longue:.85,calme:1.15,spec:1.9,counter:.36}[ch]*(ch==='passe'&&hm.target?1.25-hm.target.risk*.8:1);
+  const risky={tir:.9,dribble:.95,passe:1.05,course:1,tacle:.9,couper:1,suivre:1.05,plonge:1,sortir:.9,ligne:1,courte:1.1,longue:.85,calme:1.15,spec:1.9,counter:.36,cercle:.85,prof:1,soutien:1.2,unedeux:.95,renvers:.9}[ch]*(ch==='passe'&&hm.target?1.25-hm.target.risk*.8:1);
   const zw=clamp((18+(H[stat]-50)*.55)*risky*(.75+.25*H.energy/100)*DIFF(),8,40);
   Object.assign(hm,{phase:'time',ch,zw,zx:rint(8,92-Math.round(zw)),cur:0,dir:1,sp:(95+rint(0,20))/DIFF(),last:performance.now()});
   if(ch==='counter')hm.sp*=1.45;
@@ -2243,9 +2256,26 @@ function resolveHero(M,hm,ok,q){
     if(pre)fr([18,48],pre,'',1,{oi:n});
     fr(goal?[2,50]:[8,45],goal?`But de ${o.name} par le n°${num}.`:`Arrêt de ${first(gk)} !`,goal?'bad':'',goal?2:1.3,{oi:goal?n:null,who:goal?null:gk.id,goal:goal?'o':null})};
   switch(hm.ch){
+    case 'unedeux':{const c=pick(onField().filter(x=>x.id!==H.id&&x.pos!=='G')),cn=first(c);
+      if(!ok){fr(oPos(n,hm.type==='att'?70:55),`${h} tente l’une-deux avec ${cn}… le n°${num} coupe la remise !`,'',1.2,{oi:n});break}
+      fr(hm.type==='att'?[74,rint(35,65)]:[58,rint(35,65)],`${h} donne à ${cn}…`,'',.7,{who:c.id});
+      if(hm.type==='att'){const cp=circlePt(1,rint(38,62));fr(cp,`…une-deux parfait ! ${cn} remet dans la course de ${h}, qui entre dans le cercle !`,'hero',1,{who:H.id});fr(cp,`${h} est seul dans le cercle !`,'hero',.8,{who:H.id,heroMoment:'att',n})}
+      else{const y=rint(30,70);fr([74,y],`…une-deux parfait ! ${cn} remet à ${h} qui file vers le cercle !`,'hero',1,{who:H.id});fr([76,y],`${h} arrive au bord du cercle !`,'hero',.8,{who:H.id,heroMoment:'att',n})}
+      break}
+    case 'renvers':{const c=pick(onField().filter(x=>x.id!==H.id&&x.pos!=='G')),cn=first(c),y=R()<.5?18:82;
+      if(!ok){fr([62,y],`Le renversement de ${h} est trop long, sortie en ligne de touche.`,'',1.2,{oi:n});break}
+      fr([66,y],`Superbe renversement de jeu de ${h} vers ${cn}, seul sur l’aile !`,'',1.1,{who:c.id});const cp=circlePt(1,y<50?34:66);fr(cp,`${cn} entre dans le cercle…`,'',.9,{who:c.id});st.u.sh++;
+      if(R()<.45){M.us++;M.scorers.push(c.id);M.h.a++;fr([97,50],`BUT de ${cn} ! Sur un renversement de ${h} !`,'goal',2.6,{who:c.id,goal:'u'})}else fr([92,44],`${cn} frappe, le gardien repousse.`,'',1.3,{who:null});
+      break}
+    case 'cercle': case 'prof': case 'soutien':{const c=byId(hm.carrier)||pick(onField().filter(x=>x.id!==H.id&&x.pos!=='G')),cn=first(c);
+      if(!ok){fr(oPos(n,55),pick([`${cn} cherche ${h}… mais le n°${num} coupe la passe !`,`L’appel de ${h} arrive trop tard, le n°${num} récupère.`]),'',1.2,{oi:n});break}
+      if(hm.ch==='cercle'){const cp=circlePt(1,rint(35,65));fr(cp,`${h} file dans le cercle et appelle : ${cn} le trouve !`,'hero',1,{who:H.id});fr(cp,`${h} est dans le cercle, face au but !`,'hero',.8,{who:H.id,heroMoment:'att',n})}
+      else if(hm.ch==='prof'){const y=rint(25,75);fr([76,y],`${h} part dans le dos de la défense, ${cn} lance la balle !`,'hero',1,{who:H.id});fr([77,y],`${h} arrive au bord du cercle !`,'hero',.8,{who:H.id,heroMoment:'att',n})}
+      else{fr([55,rint(35,65)],`${h} se rend disponible, ${cn} lui donne la balle.`,'hero',.9,{who:H.id});fr([56,50],`${h} a la balle au milieu.`,'hero',.8,{who:H.id,heroMoment:'mid',n})}
+      break}
     case 'tir':{st.u.sh++;
       if(!hm.inside){if(ok&&R()<.35){const b=pick(onField().filter(x=>x.id!==H.id&&x.pos!=='G'));M.us++;M.scorers.push(b.id);M.h.a++;fr([93,rint(42,58)],`${h} frappe de loin… ${first(b)} dévie dans le cercle : BUT ! (le but compte car il est dévié dans le cercle)`,'goal',2.8,{who:b.id,goal:'u',valid:true})}
-        else if(ok) fr([99,46],`Quelle frappe de ${h}… mais elle part de l’extérieur du cercle : but refusé ! Il faut tirer depuis le cercle.`,'foul',2,{who:null});
+        else if(ok){M.us++;M.scorers.push(H.id);M.h.g++;fr([97,50],`${h} frappe de loin… la balle finit au fond !`,'goal',2,{who:H.id,goal:'u'})}
         else fr([94,30],`${h} tire de loin… à côté.`,'',1.3,{who:H.id});break}
       const goal=ok&&R()<.5+.4*q;
       if(goal){M.us++;M.scorers.push(H.id);M.h.g++;fr([97,50],`BUT ! ${h} marque ! Quelle frappe !`,'goal',2.8,{who:H.id,goal:'u'})}
@@ -2408,7 +2438,7 @@ function pcInput(v){
 }
 function pcHeroMark(p,ok){if(S.heroMode&&p&&p.id===S.hero){if(ok)PCG.M.h.ok++;else PCG.M.h.ko++}}
 function pcEnd(out){const G=PCG;G.out=out;pcSet('end');if(out.big==='BUT !'){SND.goal();SND.say('But sur corner court !',true)}else if(out.big==='But encaissé')SND.oppGoal();else if(out.good){SND.ok();SND.roar(.6)}else SND.ooh();if(navigator.vibrate)navigator.vibrate(out.good?[40,30,80]:[80,40,80]);setTimeout(pcFinish,2200)}
-function pcGoal(p,txt){const M=PCG.M;M.us++;M.scorers.push(p.id);PCG.frames=[{b:[97,50],t:`BUT ! ${txt}`,c:'goal',d:2.6,min:M.min,who:p.id,goal:'u'}];pcEnd({good:true,big:'BUT !',txt})}
+function pcGoal(p,txt){const M=PCG.M;M.us++;M.scorers.push(p.id);PCG.frames=[{b:[97,50],t:`BUT ! ${txt}`,c:'goal',d:2.6,min:M.min,who:p.id,goal:'u',valid:true}];pcEnd({good:true,big:'BUT !',txt})}
 function pcFail(big,txt,p){const M=PCG.M;if(p)pcHeroMark(p,false);PCG.frames=[{b:[91,40],t:txt,c:'',d:1.4,min:M.min,who:(p||PCG.pc.shoot).id}];pcEnd({good:false,big,txt})}
 function pcSave(txt){const M=PCG.M;if(S.heroMode&&PCG.gk&&PCG.gk.id===S.hero)M.h.sv=(M.h.sv||0)+1;PCG.frames=[{b:[8,46],t:txt,c:'',d:1.4,min:M.min,who:PCG.gk.id}];pcEnd({good:true,big:'Arrêt !',txt})}
 function pcBlock(txt,p){const M=PCG.M;if(S.heroMode&&p.id===S.hero){M.h.ok++;M.h.rec++}PCG.frames=[{b:[14,48],t:txt,c:'',d:1.4,min:M.min,who:p.id}];pcEnd({good:true,big:'Bloqué !',txt})}
