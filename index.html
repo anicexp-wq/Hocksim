@@ -668,6 +668,31 @@ body.manga .tok .fig{transform:scale(1.18);transform-origin:50% 100%}
 .tok.cap{--ring:#ff3b5c}
 .lookface{width:96px;height:106px;border:3px solid #000;border-radius:8px;background:radial-gradient(circle,rgba(0,0,0,.12) 1.1px,transparent 1.4px) 0 0/6px 6px,#fff;overflow:hidden}.lookface svg{width:100%;height:100%}
 .lkface{font-weight:700;font-size:14px}
+.lookbox{padding:10px 12px}
+.lkhead{display:flex;align-items:flex-end;gap:8px;flex:none;background:linear-gradient(180deg,#2a6bc0,#1d4f93);border-radius:14px;padding:6px 8px 4px;position:relative}
+.lkprev{width:96px;height:125px}.lkprev svg,.lkprevside svg,.lkprevface svg{width:100%;height:100%}
+.lkprevface{width:86px;height:96px;border:3px solid #000;border-radius:8px;background:radial-gradient(circle,rgba(0,0,0,.12) 1.1px,transparent 1.4px) 0 0/6px 6px,#fff;overflow:hidden;align-self:center}
+.lkprevside{width:62px;height:81px}
+.lkside{margin-left:auto;display:flex;flex-direction:column;gap:5px;align-items:stretch;align-self:stretch;justify-content:center;color:#fff}
+.lkside b{text-align:center}.seg.sm button{padding:4px 8px;font-size:13px}
+.lktabs{display:flex;gap:6px;overflow-x:auto;flex:none;margin:8px 0 6px;padding-bottom:2px;scrollbar-width:none}
+.lktabs button{flex:none;display:flex;flex-direction:column;align-items:center;gap:1px;border:2px solid var(--edge);background:var(--surface2);border-radius:12px;padding:4px 10px;font-weight:700;font-size:12px;color:var(--ink)}
+.lktabs button span{font-size:20px}.lktabs button[aria-selected="true"]{background:var(--ball);border-color:#E3AE00;color:#2B2100}
+.lkpanel{flex:1;min-height:0;overflow:auto;padding:0 2px 10px}
+.lkpanel h4{margin:10px 0 6px;font-size:15px}
+.lkgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:8px}
+.lkgrid.big3{grid-template-columns:repeat(3,1fr)}.lkgrid.big3 .lkimg{height:110px}
+.lkgrid.eyes{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}.lkgrid.eyes .lkimg{height:44px}
+.lkgrid.txt{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+.lkgrid.sws{grid-template-columns:repeat(auto-fill,minmax(40px,1fr))}
+.lkt{border:2px solid var(--edge);background:var(--surface2);border-radius:12px;padding:4px;display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--ink)}
+.lkt.on{border-color:var(--ball);box-shadow:0 0 0 3px var(--ball)}
+.lkt small{font-size:11px;font-weight:700;line-height:1.1;text-align:center}
+.lkimg{display:block;width:100%;height:76px;background:#fff;border-radius:8px;overflow:hidden}.lkimg svg{width:100%;height:100%}
+.lkt.sw{padding:3px}.lkt.sw span{display:block;width:30px;height:30px;border-radius:50%;border:2px solid rgba(0,0,0,.2)}
+.lktxt{font-size:14px;padding:6px 2px}
+.lkside .btn{color:var(--ink)}
+.lkside .btn.go{color:#2B2100}
 </style>
 </head>
 <body>
@@ -1209,9 +1234,8 @@ function figShonen(o){
   let inner;
   if(view==='back'){
     const head=o.gk?`<g transform="translate(50 31)">${shHelmet()}</g>`:`<g transform="translate(50 31)">${hb}<path d="M-12.4 -1 Q-15 1 -12.6 5.5 M12.4 -1 Q15 1 12.6 5.5" stroke="#000" stroke-width="1.1" fill="${P.skin}"/><path d="M-12 -4 Q-12 -17 0 -17 Q12 -17 12 -4 L11 6 Q6 13 0 14 Q-6 13 -11 6Z" fill="${P.skin}" stroke="#000" stroke-width="1.4"/>
-      <path d="M-14.5 4 Q-17 -14 -6 -19.5 L-11 -28 L-2 -22.5 L0 -32 L5.5 -22.5 L14 -29 L10.5 -19 Q18 -14 15.5 4 Q14 11 9 12.5 L6 9 L3.5 13.5 L0 10 L-3.5 13.5 L-6 9 L-9 12.5 Q-14 11 -14.5 4Z" fill="${P.hair}" stroke="#000" stroke-width="1.4" stroke-linejoin="round"/>
-      <path d="M-9 -15.5 Q0 -20 9 -15.5" stroke="#fff" stroke-opacity=".7" stroke-width="2" fill="none" stroke-linecap="round"/>${band}</g>`;
-    inner=`${b.legs}${b.shorts}${b.torso}${b.num}${b.neck}${b.armL}${b.armR}${shStick(o,P,[[41,96],[30,182],[20,183]])}${head}`;
+      ${shBackHair(P)}${band}</g>`;
+    inner=`${shStick(o,P,[[54,92],[64,182],[74,184]])}${b.legs}${b.shorts}${b.armL}${b.armR}${b.torso}${b.num}${b.neck}${head}`;
   } else if(view==='side'){
     const l=PO.l||0, k=l/24;
     const sp={Hc:[53,31],S:[50,60],E:[58,82],H:[64,96],S2:[46,61],E2:[50,84],H2:[60,98],I:[50,110],K1:[56+10*k,146],A1:[58+18*k,180],K2:[46-10*k,146],A2:[42-18*k,180]};
@@ -1290,7 +1314,28 @@ function shNum(o,SL,SR,IL,IR,view){const cx=(SL[0]+SR[0]+IL[0]+IR[0])/4,cy=(SL[1
 function shHeadFront(P,o,Hc,tilt,e){const [hb,hf]=shHair(P.style,P.hair),band=P.acc==='band'||P.acc==='bandwrist'?`<path d="M-13.4 -9.6 Q0 -14 13.4 -9.6 L13.4 -6.2 Q0 -10.6 -13.4 -6.2Z" fill="${P.accC}" stroke="#000" stroke-width="1.1"/>`:'';
   return `<g transform="translate(${shP(Hc)}) rotate(${tilt})">${o.gk?shHelmet():hb+shFace(P,e)+hf+band}</g>`}
 function shHeadBack(P,o,Hc,tilt){return `<g transform="translate(${shP(Hc)}) rotate(${tilt})">${o.gk?shHelmet():`${shHair(P.style,P.hair)[0]}<path d="M-12.4 -1 Q-15 1 -12.6 5.5 M12.4 -1 Q15 1 12.6 5.5" stroke="#000" stroke-width="1.1" fill="${P.skin}"/><path d="M-12 -4 Q-12 -17 0 -17 Q12 -17 12 -4 L11 6 Q6 13 0 14 Q-6 13 -11 6Z" fill="${P.skin}" stroke="#000" stroke-width="1.4"/>
-  <path d="M-14.5 4 Q-17 -14 -6 -19.5 L-11 -28 L-2 -22.5 L0 -32 L5.5 -22.5 L14 -29 L10.5 -19 Q18 -14 15.5 4 Q14 11 9 12.5 L6 9 L3.5 13.5 L0 10 L-3.5 13.5 L-6 9 L-9 12.5 Q-14 11 -14.5 4Z" fill="${P.hair}" stroke="#000" stroke-width="1.4" stroke-linejoin="round"/><path d="M-9 -15.5 Q0 -20 9 -15.5" stroke="#fff" stroke-opacity=".7" stroke-width="2" fill="none" stroke-linecap="round"/>`}</g>`}
+  ${shBackHair(P)}`}</g>`}
+function shBackHair(P){const c=P.hair,st=P.style,S=`fill="${c}" stroke="#000" stroke-width="1.4" stroke-linejoin="round"`,hl=`<path d="M-9 -15.5 Q0 -20 9 -15.5" stroke="#fff" stroke-opacity=".6" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+  const cap=`<path d="M-13.2 6 Q-15 -17 0 -18.5 Q15 -17 13.2 6 Q7 11 0 11.5 Q-7 11 -13.2 6Z" ${S}/>`;
+  const spiky=`<path d="M-14.5 4 Q-17 -14 -6 -19.5 L-11 -28 L-2 -22.5 L0 -32 L5.5 -22.5 L14 -29 L10.5 -19 Q18 -14 15.5 4 Q14 11 9 12.5 L6 9 L3.5 13.5 L0 10 L-3.5 13.5 L-6 9 L-9 12.5 Q-14 11 -14.5 4Z" ${S}/>`;
+  switch(st){
+    case 1: return `<path d="M-14 5 Q-16.5 -16 0 -19 Q16 -17 14.5 5 Q9 9.5 4 8 L1 11 L-3 8 Q-9 10 -14 5Z" ${S}/><path d="M-6 -18 L-18 -22 L-12 -14Z" ${S}/>`+hl;
+    case 2: return `<g ${S}>${[[-10,-12],[-4,-16],[3,-16],[9,-12],[-12,-4],[12,-4],[-8,3],[0,-6],[8,3],[0,5]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="5.4"/>`).join('')}</g>`;
+    case 3: return `<path d="M-14 -2 Q-18 -19 0 -19.5 Q18 -19 14 -2 L16.5 21 Q8 25 0 24 Q-8 25 -16.5 21Z" ${S}/>`+hl;
+    case 5: return cap+`<path d="M-3 4 Q-5 14 -2 24 Q0 28 2 24 Q5 14 3 4Z" ${S}/><circle cx="0" cy="4" r="2.6" fill="#E53935" stroke="#000"/>`+hl;
+    case 6: return cap+`<circle cx="-13" cy="-15" r="5.4" ${S}/><circle cx="13" cy="-15" r="5.4" ${S}/>`+hl;
+    case 7: return `<path d="M-4 -15 L-5 -31 L-1 -23 L1 -34 L3 -23 L6 -30 L5 -15 L4 10 L-4 10Z" ${S}/>`;
+    case 8: return `<path d="M-12.4 6 Q-13.6 -17.6 0 -18 Q13.6 -17.6 12.4 6 Q7 10 0 10.5 Q-7 10 -12.4 6Z" ${S} fill-opacity=".8"/>`;
+    case 9: return `<g ${S}>${Array.from({length:16},(_,i)=>{const a=i/16*Math.PI*2;return `<circle cx="${(Math.cos(a)*14).toFixed(1)}" cy="${(-5+Math.sin(a)*14).toFixed(1)}" r="6.6"/>`}).join('')}<circle cx="0" cy="-5" r="12"/></g>`;
+    case 10: return cap+`<path d="M-4 -17 Q6 -31 18 -24 Q10 -21 8 -15Z" ${S}/>`+hl;
+    case 11: return cap+`<g stroke="#000" stroke-width="5.4" stroke-linecap="round">${[-11,-6,0,6,11].map(x=>`<line x1="${x}" y1="0" x2="${x*1.1}" y2="20"/>`).join('')}</g><g stroke="${c}" stroke-width="3.4" stroke-linecap="round">${[-11,-6,0,6,11].map(x=>`<line x1="${x}" y1="0" x2="${x*1.1}" y2="20"/>`).join('')}</g>`;
+    case 12: return `<path d="M-14.2 6 Q-16 -19 0 -19 Q16 -19 14.2 6 Q7 9 0 9 Q-7 9 -14.2 6Z" ${S}/>`+hl;
+    case 13: return cap+`<circle cx="0" cy="-20" r="6.6" ${S}/>`+hl;
+    case 14: return `<path d="M-14 -2 Q-18 -19 0 -19.5 Q18 -19 14 -2 L15.5 12 Q8 15 0 14.5 Q-8 15 -15.5 12Z" ${S}/>`+hl;
+    case 15: return cap+`<g ${S}>${[-1,1].map(d=>[0,1,2,3,4].map(k=>`<ellipse cx="${d*(7-k*.6)}" cy="${12+k*4.4}" rx="3" ry="2.8"/>`).join('')).join('')}</g>`+hl;
+    default: return spiky+hl;
+  }
+}
 function shSideHair(P){const c=P.hair,st=P.style,S=`fill="${c}" stroke="#000" stroke-width="1.4" stroke-linejoin="round"`;
   if(st===8)return `<path d="M-10.5 -2 Q-11 -17 1 -17.5 Q11 -16.5 11.5 -8 Q2 -11 -10.5 -2Z" ${S} fill-opacity=".85"/>`;
   if(st===2||st===9){const R0=st===9?7:5;return `<g ${S}>${[[-9,-4],[-6,-12],[1,-15],[7,-13],[-11,4],[-3,-7]].map(([x,y])=>`<circle cx="${x*(st===9?1.25:1)}" cy="${y*(st===9?1.2:1)}" r="${R0}"/>`).join('')}</g>`}
@@ -1318,7 +1363,7 @@ function shRunFB(o,P,view,ph,a,m,d){
   const Bh=shL(T,B,.36),EL=[(SL[0]+T[0])/2-9,(SL[1]+T[1])/2+3],ER=[(SR[0]+Bh[0])/2+9,(SR[1]+Bh[1])/2];
   const legs=[[IL,KL,AL],[IR,KR,AR]].map(([i,k,an])=>shLeg(P,o,i,k,an,false)).join('');
   const torso=shTorso(P,o,SL,SR,IL,IR,view), neck=shLimb(N,[N[0],N[1]-12],8,P.skin), stick=shStick2(P,o,T,B);
-  if(view==='back') return `${stick}${legs}${torso}${shNum(o,SL,SR,IL,IR,'back')}${neck}${shArm(P,o,SL,EL,T)}${shArm(P,o,SR,ER,Bh)}${shHeadBack(P,o,Hc,0)}`;
+  if(view==='back') return `${stick}${legs}${shArm(P,o,SL,[SL[0]+2,SL[1]+20],[Px-4,Py-24])}${shArm(P,o,SR,[SR[0]-2,SR[1]+20],[Px+4,Py-22])}${torso}${shNum(o,SL,SR,IL,IR,'back')}${neck}${shHeadBack(P,o,Hc,0)}`;
   return `${legs}${torso}${shNum(o,SL,SR,IL,IR,'front')}${neck}${shArm(P,o,SL,EL,T)}${shArm(P,o,SR,ER,Bh)}${stick}${shHeadFront(P,o,Hc,0,m==='k'||m==='w'?'shout':'det')}`;
 }
 /* vue de profil en mouvement (tournée vers la droite) */
@@ -1779,7 +1824,7 @@ function animate(t){
   const dt=Math.min(.05,Math.max(0,(t-MV.last)/1000));MV.last=t;
   if(!ui.match||!MV.ball||!document.body.contains(MV.ball.el)){MV.raf=0;return}
   const sp=1/(SPEEDS[ui.spd][1]*(L3.on?1.3:1)), kP=1-Math.exp(-dt*2.2*sp), kB=1-Math.exp(-dt*(L3.on?2.6:4)*sp), amp=ui.match.running?1:.35;
-  MV.els.forEach(m=>{const K=(m.fast?18:9)*sp*sp,Cd=2*Math.sqrt(K);m.vx=(m.vx||0)+((m.tx-m.x)*K-(m.vx||0)*Cd)*dt;m.vy=(m.vy||0)+((m.ty-m.y)*K-(m.vy||0)*Cd)*dt;{const v=Math.hypot(m.vx,m.vy),mx=(m.fast?22:12)*sp;if(v>mx){m.vx*=mx/v;m.vy*=mx/v}}m.x+=m.vx*dt;m.y+=m.vy*dt;m.spd=Math.hypot(m.vx,m.vy);
+  MV.els.forEach(m=>{const far=Math.hypot(m.tx-m.x,m.ty-m.y),K=(m.fast?(far>8?40:18):9)*sp*sp,Cd=2*Math.sqrt(K);m.vx=(m.vx||0)+((m.tx-m.x)*K-(m.vx||0)*Cd)*dt;m.vy=(m.vy||0)+((m.ty-m.y)*K-(m.vy||0)*Cd)*dt;{const v=Math.hypot(m.vx,m.vy),mx=(m.fast?(far>8?40:22):12)*sp;if(v>mx){m.vx*=mx/v;m.vy*=mx/v}}m.x+=m.vx*dt;m.y+=m.vy*dt;m.spd=Math.hypot(m.vx,m.vy);
     const mv=m.spd>1.6&&amp>.5; if(mv!==m.mv){m.mv=mv;m.el.classList.toggle('mv',mv)}
     const w=(m.g?.2:.5)*amp;
     m.el.style.left=(m.x+Math.sin(t/900+m.ph)*.5*w)+'%';m.el.style.top=(m.y+Math.cos(t/1150+m.ph*1.3)*.7*w)+'%'});
@@ -1790,7 +1835,7 @@ function animate(t){
   if(ui.match&&(ui.match.running||ui.match.rec)) snapPush(t,MV.els,MV.ball);
   const b=MV.ball, M0=ui.match; let bt=[b.tx,b.ty], ck=null;
   if(!M0.free){let ce=null;if(M0.who){const i=S.lineup.indexOf(M0.who);ce=MV.els.find(m=>m.el.dataset.u==i)}else if(M0.oi)ce=MV.els.find(m=>m.el.dataset.o==M0.oi);
-    if(ce){const d=ce.el.dataset.u!=null?1:-1,v=Math.hypot(ce.vx||0,ce.vy||0),ux=v>1.6?ce.vx/v:d,uy=v>1.6?ce.vy/v:0;bt=[ce.x+ux*1.9,ce.y+uy*1.9+.6+(ce.mv?Math.sin(t/170)*.5:0)];ck=ce}}
+    if(ce&&Math.hypot(ce.x-b.tx,ce.y-b.ty)<7){const d=ce.el.dataset.u!=null?1:-1,v=Math.hypot(ce.vx||0,ce.vy||0),ux=v>1.6?ce.vx/v:d,uy=v>1.6?ce.vy/v:0;bt=[ce.x+ux*1.9,ce.y+uy*1.9+.6+(ce.mv?Math.sin(t/170)*.5:0)];ck=ce}}
   const kk=ck&&b.carrier===ck?1-Math.exp(-dt*(L3.on?10:16)):kB; b.carrier=ck; b.x+=(bt[0]-b.x)*kk;b.y+=(bt[1]-b.y)*kk;b.el.style.left=b.x+'%';b.el.style.top=b.y+'%';
   if(L3.on){const mp=$('#mpitch');if(mp&&mp.parentElement){if(!L3.roster){L3.roster=rosterMain();Object.values(L3.roster).forEach(r=>shPrewarm(r.o))}live3D(mp.parentElement,t,MV.els,b,L3.roster,M0)}}
   MV.raf=requestAnimationFrame(animate);
@@ -2736,36 +2781,44 @@ function startAmical(){
 const STICKS=['#2d2d2d','#E53935','#1E88E5','#FDD835','#8E24AA','#FF6D00','#FFFFFF','#1E9E68','#E35AA8'], CELES=['BUT !','GOAL !','YES !','TROP FORT !','BOUM !','ALLEZ !','INCROYABLE !','OUAIS !'];
 function lookOf(H){if(!H.look){const h=hsh(H.id+H.name);H.look={celeb:celebOf(H),hair:(h>>6)%3,hc:(h>>3)%HAIR.length,skin:h%SKIN.length,stick:'#2d2d2d',cele:'BUT !'}}return H.look}
 function openLook(){
-  const H=heroP(); if(!H) return; const L=lookOf(H);
-  const opt=(k,vals,render)=>`<div class="lookrow">${vals.map((v,i)=>{const val=['hair','hc','skin','eye','head','eyeS'].includes(k)?i:v;return `<button class="lk${(L[k]??({acc:'none',face:'det',shoe:'#1b1b1b',accC:'#E53935',ht:'m',bd:'n',head:0,eyeS:0,brow:'thick',freck:false})[k]??null)===val?' on':''}" data-act="look" data-k="${k}" data-v="${val}">${render(v,i)}</button>`}).join('')}</div>`;
-  const mini=over=>`<span class="lkfig">${figSVG({...figOf(H),look:{...L,...over}})}</span>`, sw=c=>`<span class="sw1" style="background:${c}"></span>`;
-  const m=$('#modal'); m.hidden=false;
-  m.innerHTML=`<div class="box mid fit" role="dialog" aria-modal="true" aria-label="Personnaliser">
-   <div class="row" style="justify-content:space-between;flex:none"><h2 style="font-size:22px">🎨 Le look de ${esc(first(H))}</h2><button class="btn go" data-act="closeinfo">OK</button></div>
-   <div class="lookbody"><div class="lookprev3"><div class="lookprev cel-${L.celeb||'saut'} loop">${figSVG({...figOf(H),look:L})}</div>${STYLE==='manga'?`<div class="lookface">${capPortrait({...figOf(H),look:L})}</div>`:''}<div class="lookprev sm">${figSVG({...figOf(H),look:L,view:'side',pose:{l:18}})}</div><div class="lookprev sm">${figSVG({...figOf(H),look:L,view:'back'})}</div></div>
-   <p><b>Style du jeu</b></p><div class="seg"><button data-act="gstyle" data-v="classic" aria-pressed="${STYLE==='classic'}">🖍️ Classique</button><button data-act="gstyle" data-v="manga" aria-pressed="${STYLE==='manga'}">⚡ Manga sportif</button></div>
-   <p><b>Taille</b></p>${opt('ht',['s','m','l'],k=>({s:'Petit',m:'Moyen',l:'Grand'})[k])}
-   <p><b>Corpulence</b></p>${opt('bd',['thin','n','big'],k=>({thin:'Mince',n:'Normal',big:'Costaud'})[k])}
-   <p><b>Forme du visage</b></p>${opt('head',[0,1,2,3],(v,i)=>`<span class="lkface">${['🔻','⚪','⬛','🥚'][i]} ${['Ovale','Rond','Carré','Fin'][i]}</span>`)}
-   <p><b>Forme des yeux</b></p>${opt('eyeS',[0,1,2,3],(v,i)=>['Grands','Perçants','Ronds','Rieurs'][i])}
-   <p><b>Sourcils</b></p>${opt('brow',['thick','thin'],k=>k==='thick'?'Épais':'Fins')}
-   <p><b>Taches de rousseur</b></p>${opt('freck',[false,true],k=>k?'Oui':'Non')}
-   <p><b>Coiffure</b></p>${opt('hair',[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],(v,i)=>mini({hair:i}))}
-   <p><b>Couleur des cheveux</b></p>${opt('hc',HAIRX,sw)}
-   <p><b>Peau</b></p>${opt('skin',SKINX,sw)}
-   <p><b>Couleur des yeux</b></p>${opt('eye',EYES,sw)}
-   <p><b>Regard</b></p>${opt('face',FACES.map(f=>f[0]),(k)=>esc(FACES.find(f=>f[0]===k)[1]))}
-   <p><b>Accessoire</b></p>${opt('acc',ACCS.map(a=>a[0]),(k)=>esc(ACCS.find(a=>a[0]===k)[1]))}
-   <p><b>Couleur de l’accessoire</b></p>${opt('accC',ACCC,sw)}
-   <p><b>Chaussures</b></p>${opt('shoe',SHOES,sw)}
-   <p><b>Couleur de la crosse</b></p>${opt('stick',STICKS,sw)}
-   <p><b>Cri de but</b></p>${opt('cele',CELES,(c)=>esc(c))}
-   <p><b>Célébration de but</b></p>${opt('celeb',CELEBS.map(c=>c[0]),(k)=>esc(celebName(k)))}
-   <p><b>⚡ Coup spécial</b> <span class="hint">(se débloque après ${SPEC_NEED} actions réussies d’affilée)</span></p><div class="lookrow">${Object.entries(SPECIALS).filter(([k,v])=>H.pos==='G'?['titan','acier','aimant'].includes(k):k!=='titan').map(([k,v])=>`<button class="lk${heroSpec().k===k?' on':''}" data-act="hspec" data-v="${k}" title="${esc(v.d)}">${v.ic} ${esc(v.n)}</button>`).join('')}</div>
-   <label class="hint" style="display:block;margin-top:6px">Nom de ton coup : <input id="specname" maxlength="22" value="${esc((S.heroSpec&&S.heroSpec.name)||'')}" placeholder="${esc(heroSpec().n)}" class="ssel"></label>
-   <p><b>🎤 Mon cri de but (ma voix)</b></p><div class="row"><button class="btn blue" data-act="vrec">● Enregistrer (3 s)</button>${L.voice?'<button class="btn" data-act="vplay">▶ Écouter</button><button class="btn" data-act="vdel">🗑 Effacer</button>':''}</div>
-   <p class="hint" style="margin:4px 0 0">Crie ton « BUUUT ! » : il sera joué à chaque but de ${esc(first(H))}, à la place du commentateur.</p></div></div>`;
+  const H=heroP(); if(!H) return; const L=lookOf(H), tab=ui.lookTab||'corps', base={...figOf(H),gk:false};
+  const DEF={acc:'none',face:'det',shoe:'#1b1b1b',accC:'#E53935',ht:'m',bd:'n',head:0,eyeS:0,brow:'thick',freck:false,stick:'#2d2d2d',cele:'BUT !'};
+  const cur=k=>L[k]??DEF[k]??null, NUM=['hair','hc','skin','eye','head','eyeS'];
+  const head=over=>STYLE==='manga'?capPortrait({...base,look:{...L,...over}}).replace(/viewBox="16 ([\d.-]+) 68 76"/,(m0,y)=>`viewBox="24 ${(+y-4).toFixed(1)} 52 60"`):figSVG({...base,look:{...L,...over}}).replace('viewBox="0 0 40 52"','viewBox="8 -1 24 24"');
+  const eyes=over=>{const lk={...L,...over};if(STYLE!=='manga')return figSVG({...base,look:lk}).replace('viewBox="0 0 40 52"','viewBox="12 6 16 9"');const ey=187-(187-30.6)*shHS(lookParts({...base,look:lk}));return figShonen({...base,view:'front',pose:{e:'det'},look:lk}).replace('viewBox="-33 -24 166 216"',`viewBox="33 ${(ey-8).toFixed(1)} 34 15"`)};
+  const body=over=>figSVG({...base,look:{...L,...over}});
+  const tiles=(k,vals,render,cls='')=>`<div class="lkgrid ${cls}">${vals.map((v,i)=>{const val=NUM.includes(k)?i:v;return `<button class="lkt${cur(k)===val?' on':''}" data-act="look" data-k="${k}" data-v="${val}">${render(v,i)}</button>`}).join('')}</div>`;
+  const sw=(k,list)=>`<div class="lkgrid sws">${list.map((c,i)=>{const val=NUM.includes(k)?i:c;return `<button class="lkt sw${cur(k)===val?' on':''}" data-act="look" data-k="${k}" data-v="${val}" aria-label="Couleur ${i+1}"><span style="background:${c}"></span></button>`}).join('')}</div>`;
+  const lab=(t,svg)=>`<span class="lkimg">${svg}</span><small>${t}</small>`;
+  const HN=['Pointes','Mèche','Bouclés','Longs','Hérissés','Queue','Couettes','Crête','Rasé','Afro','Banane','Dreads','Bol','Chignon','Mi-longs','Tresses'];
+  const T={
+   corps:()=>`<h4>Taille</h4>${tiles('ht',['s','m','l'],k=>lab({s:'Petit',m:'Moyen',l:'Grand'}[k],body({ht:k})),'big3')}
+     <h4>Corpulence</h4>${tiles('bd',['thin','n','big'],k=>lab({thin:'Mince',n:'Normal',big:'Costaud'}[k],body({bd:k})),'big3')}
+     <h4>Peau</h4>${sw('skin',SKINX)}`,
+   visage:()=>`<h4>Forme du visage</h4>${tiles('head',[0,1,2,3],(v,i)=>lab(['Ovale','Rond','Carré','Fin'][i],head({head:i})),'heads')}
+     <h4>Expression</h4>${tiles('face',FACES.map(f=>f[0]),k=>lab(FACES.find(f=>f[0]===k)[1],head({face:k})),'heads')}
+     <h4>Taches de rousseur</h4>${tiles('freck',[false,true],k=>lab(k?'Oui':'Non',head({freck:k})),'heads')}`,
+   yeux:()=>`<h4>Forme des yeux</h4>${tiles('eyeS',[0,1,2,3],(v,i)=>lab(['Grands','Perçants','Ronds','Rieurs'][i],eyes({eyeS:i})),'eyes')}
+     <h4>Couleur des yeux</h4>${sw('eye',EYES)}
+     <h4>Sourcils</h4>${tiles('brow',['thick','thin'],k=>lab(k==='thick'?'Épais':'Fins',eyes({brow:k})),'eyes')}`,
+   cheveux:()=>`<h4>Coiffure</h4>${tiles('hair',HN,(v,i)=>lab(v,head({hair:i})),'heads')}<h4>Couleur des cheveux</h4>${sw('hc',HAIRX)}`,
+   tenue:()=>`<h4>Accessoire</h4>${tiles('acc',ACCS.map(a=>a[0]),k=>lab(ACCS.find(a=>a[0]===k)[1],head({acc:k})),'heads')}
+     <h4>Couleur de l’accessoire</h4>${sw('accC',ACCC)}<h4>Chaussures</h4>${sw('shoe',SHOES)}<h4>Crosse</h4>${sw('stick',STICKS)}`,
+   fete:()=>`<h4>Célébration de but</h4>${tiles('celeb',CELEBS.map(c=>c[0]),k=>`<b class="lktxt">${esc(celebName(k))}</b>`,'txt')}
+     <h4>Cri de but</h4>${tiles('cele',CELES,c=>`<b class="lktxt">${esc(c)}</b>`,'txt')}
+     <h4>🎤 Mon cri enregistré</h4><div class="row"><button class="btn blue" data-act="vrec">● Enregistrer (3 s)</button>${L.voice?'<button class="btn" data-act="vplay">▶ Écouter</button><button class="btn" data-act="vdel">🗑 Effacer</button>':''}</div>`,
+   coup:()=>`<h4>⚡ Coup spécial <span class="hint">(après ${SPEC_NEED} actions réussies d’affilée)</span></h4><div class="lkgrid txt">${Object.entries(SPECIALS).filter(([k])=>H.pos==='G'?['titan','acier','aimant'].includes(k):k!=='titan').map(([k,v])=>`<button class="lkt${heroSpec().k===k?' on':''}" data-act="hspec" data-v="${k}"><b class="lktxt">${v.ic} ${esc(v.n)}</b><small>${esc(v.d)}</small></button>`).join('')}</div>
+     <label class="hint" style="display:block;margin-top:10px">Nom de ton coup : <input id="specname" maxlength="22" value="${esc((S.heroSpec&&S.heroSpec.name)||'')}" placeholder="${esc(heroSpec().n)}" class="ssel"></label>`};
+  const TABS=[['corps','🧍','Corps'],['visage','🙂','Visage'],['yeux','👀','Yeux'],['cheveux','💇','Cheveux'],['tenue','🧢','Tenue'],['fete','🎉','Fête'],['coup','⚡','Coup']];
+  const m=$('#modal'); m.hidden=false; const keepScroll=m.querySelector('.lkpanel')?m.querySelector('.lkpanel').scrollTop:0, sameTab=m.dataset.ltab===tab;
+  m.innerHTML=`<div class="box mid fit lookbox" role="dialog" aria-modal="true" aria-label="Personnaliser">
+   <div class="lkhead"><div class="lkprev">${figSVG({...base,look:L})}</div>${STYLE==='manga'?`<div class="lkprevface">${capPortrait({...base,look:L})}</div>`:''}<div class="lkprevside">${figSVG({...base,look:L,view:'side',pose:STYLE==='manga'?{ph:2,a:1,m:'c',d:0}:{l:18}})}</div>
+     <div class="lkside"><b>${esc(first(H))}</b><div class="seg sm"><button data-act="gstyle" data-v="classic" aria-pressed="${STYLE==='classic'}">🖍️</button><button data-act="gstyle" data-v="manga" aria-pressed="${STYLE==='manga'}">⚡ Manga</button></div><button class="btn sm" data-act="lookrand">🎲 Au hasard</button><button class="btn go sm" data-act="closeinfo">OK</button></div></div>
+   <div class="lktabs" role="tablist">${TABS.map(([k,ic,n])=>`<button role="tab" aria-selected="${tab===k}" data-act="looktab" data-v="${k}"><span>${ic}</span>${n}</button>`).join('')}</div>
+   <div class="lkpanel">${T[tab]()}</div></div>`;
+  m.dataset.ltab=tab; if(sameTab){const pn=m.querySelector('.lkpanel');if(pn)pn.scrollTop=keepScroll}
 }
+function lookRandom(){const H=heroP();if(!H)return;const L=lookOf(H),r=n=>Math.floor(R()*n);Object.assign(L,{ht:pick(['s','m','l']),bd:pick(['thin','n','big']),skin:r(SKINX.length),head:r(4),face:pick(['det','smile','cool']),freck:R()<.25,eyeS:r(4),eye:r(EYES.length),brow:pick(['thick','thin']),hair:r(16),hc:r(HAIRX.length),acc:pick(['none','none','band','glasses','wrist']),accC:pick(ACCC),shoe:pick(SHOES),stick:pick(STICKS)});save();render();openLook()}
 
 /* ---------- sauvegarde ---------- */
 const b64e=s=>btoa(unescape(encodeURIComponent(s))), b64d=s=>decodeURIComponent(escape(atob(s.replace(/\s/g,''))));
@@ -2889,12 +2942,12 @@ function duoAnim(t){
   const dt=Math.min(.05,Math.max(0,(t-DMV.last)/1000));DMV.last=t;
   if(!D||!DMV.ball||!document.body.contains(DMV.ball.el)){DMV.raf=0;return}
   const sp=1/(SPEEDS[ui.spd][1]*(L3.on&&D.solo?1.3:1)), kB=1-Math.exp(-dt*(L3.on&&D.solo?2.6:4)*sp), amp=D.running?1:.35;
-  DMV.els.forEach(m=>{const K=(m.fast?18:9)*sp*sp,Cd=2*Math.sqrt(K);m.vx=(m.vx||0)+((m.tx-m.x)*K-(m.vx||0)*Cd)*dt;m.vy=(m.vy||0)+((m.ty-m.y)*K-(m.vy||0)*Cd)*dt;{const v=Math.hypot(m.vx,m.vy),mx=(m.fast?22:12)*sp;if(v>mx){m.vx*=mx/v;m.vy*=mx/v}}m.x+=m.vx*dt;m.y+=m.vy*dt;m.spd=Math.hypot(m.vx,m.vy);
+  DMV.els.forEach(m=>{const far=Math.hypot(m.tx-m.x,m.ty-m.y),K=(m.fast?(far>8?40:18):9)*sp*sp,Cd=2*Math.sqrt(K);m.vx=(m.vx||0)+((m.tx-m.x)*K-(m.vx||0)*Cd)*dt;m.vy=(m.vy||0)+((m.ty-m.y)*K-(m.vy||0)*Cd)*dt;{const v=Math.hypot(m.vx,m.vy),mx=(m.fast?(far>8?40:22):12)*sp;if(v>mx){m.vx*=mx/v;m.vy*=mx/v}}m.x+=m.vx*dt;m.y+=m.vy*dt;m.spd=Math.hypot(m.vx,m.vy);
     const mv=m.spd>1.6&&amp>.5; if(mv!==m.mv){m.mv=mv;m.el.classList.toggle('mv',mv)}
     const w=(m.g?.2:.5)*amp;m.el.style.left=(m.x+Math.sin(t/900+m.ph)*.5*w)+'%';m.el.style.top=(m.y+Math.cos(t/1150+m.ph*1.3)*.7*w)+'%'});
   if(D.running||D.rec) snapPush(t,DMV.els,DMV.ball);
   const b=DMV.ball; let bt=[b.tx,b.ty], ck=null;
-  if(!D.free&&D.who){const i=D.T[D.who.s].lineup.indexOf(D.who.id);ck=DMV.els.find(m=>m.el.dataset.d===D.who.s+'-'+i);if(ck){const d=D.who.s===0?1:-1;bt=[ck.x+d*1.5,ck.y+1.2]}}
+  if(!D.free&&D.who){const i=D.T[D.who.s].lineup.indexOf(D.who.id);ck=DMV.els.find(m=>m.el.dataset.d===D.who.s+'-'+i);if(ck&&Math.hypot(ck.x-b.tx,ck.y-b.ty)>=7)ck=null;if(ck){const d=D.who.s===0?1:-1;bt=[ck.x+d*1.5,ck.y+1.2]}}
   const kk=ck&&b.carrier===ck?1-Math.exp(-dt*16):kB; b.carrier=ck; b.x+=(bt[0]-b.x)*kk;b.y+=(bt[1]-b.y)*kk;b.el.style.left=b.x+'%';b.el.style.top=b.y+'%';
   if(L3.on){const dp=$('#dpitch');if(dp&&dp.parentElement)live3D(dp.parentElement,t,DMV.els,b,L3.roster||(L3.roster=rosterDuo()),D)}
   DMV.raf=requestAnimationFrame(duoAnim);
@@ -4122,7 +4175,7 @@ function counterFrames(M,ok,touched){
   else{M.h.ko++;M.them++;R0.conc++;fr([2,50],touched?`${h} touche la balle… mais « ${sp.n} » de ${cap.name} est trop puissant : but !`:`${cap.name} marque grâce à « ${sp.n} »…`,'bad',2,{oi:M.capIdx||2,goal:'o',valid:true})}
   return F;
 }
-function capPortrait(o){return figShonen({...o,view:'front',pose:{e:'det'}}).replace('viewBox=\"-33 -24 166 216\"','viewBox="16 -8 68 76"')}
+function capPortrait(o){const hs=shHS(lookParts(o)),hc=187-(187-31)*hs;return figShonen({...o,view:'front',pose:{e:'det'}}).replace('viewBox="-33 -24 166 216"',`viewBox="16 ${(hc-39).toFixed(1)} 68 76"`)}
 function openRivals(){
   const ids=[...new Set(divIds(S.div).filter(id=>id!==0).concat(Object.keys(S.riv||{}).map(Number)))];
   const list=ids.map(id=>{const cap=capOf(id),R0=riv(id),t=team(id),sp=RSPEC[cap.spec];return {id,cap,R0,t,sp}}).sort((a,b)=>b.R0.heat-a.R0.heat||b.R0.m-a.R0.m);
@@ -4275,6 +4328,8 @@ document.addEventListener('click',e=>{
   else if(a==='scene'){const [id,x]=v.split('|');sceneDone(id,x)}
   else if(a==='storyoff'){if(confirm('Couper le mode histoire pour cette partie ?')){S.storyOff=true;save();closeModal()}}
   else if(a==='trophies'){openTrophies()}
+  else if(a==='looktab'){ui.lookTab=v;openLook()}
+  else if(a==='lookrand'){lookRandom()}
   else if(a==='rivals'){openRivals()}
   else if(a==='hspec'){const H=heroP();if(H){S.heroSpec=S.heroSpec||{};S.heroSpec.k=v;save();openLook()}}
   else if(a==='v3'){l3Set(!L3.on)}
