@@ -262,7 +262,7 @@ body.inmatch main{padding:0}
 .mside .feed{max-height:none;flex:1;min-height:0}
 @media (max-width:899px){.mside{display:none}}
 @media (min-width:900px){.ticker{display:none}}
-.box.fit{display:flex;flex-direction:column;height:calc(100dvh - 40px);overflow:hidden}
+.box.fit{display:flex;flex-direction:column;height:calc(100dvh - 40px);overflow:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .box.fit #editor{flex:1;min-height:0;display:flex;flex-direction:column;gap:6px}
 .box.fit #editor>*{flex:none}
 .bench{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
@@ -701,7 +701,8 @@ body.manga .tok .fig{transform:scale(1.18);transform-origin:50% 100%}
 .qbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}.qbtns .btn{min-height:52px;font-size:18px}
 #sheet{touch-action:none}
 /* empêcher le « tirer pour rafraîchir » et les gestes du navigateur pendant le jeu */
-html,body{overscroll-behavior:none;overscroll-behavior-y:none}
+html,body{overscroll-behavior-x:none}
+body.inmatch,body.fsm{overscroll-behavior:none}
 .mview,.cwrap,#sheet,#stf,.sofield,.dpc,.cutin,.replay,.pccanvas,#pcc,canvas{touch-action:none}
 body.inmatch{overflow:hidden}
 .tbar.pct .ttgt{position:absolute;top:-6px;bottom:-6px;width:4px;margin-left:-2px;background:#000;border-radius:2px}
@@ -1115,7 +1116,7 @@ body.cartoon .sav,body.cartoon .ccard .cf{border:3px solid #1d1d24}
 .vestwrap{border-radius:14px;overflow:hidden;border:3px solid #1d1d24;flex:none}.vestsvg{display:block;width:100%;height:auto}
 .vestsvg .vmas{animation:vBob 1.4s ease-in-out infinite;transform-origin:center}
 @keyframes vBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-.vgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;overflow:auto}
+.vgrid{flex:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;overflow:auto}
 .vit{border:2px solid var(--line,#d5dde8);border-radius:12px;background:var(--surface);padding:6px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;font:inherit;color:inherit}
 .vit.on{border-color:#22C27A;background:rgba(34,194,122,.12)}.vit b{font-size:12px}.vit small{font-size:11px;color:var(--muted)}.vic{font-size:24px}.vsw{width:30px;height:22px;border-radius:6px;border:2px solid #1d1d24}
 #toks .tok.piltk::before{content:'';position:absolute;left:50%;top:50%;width:40px;height:40px;margin:-20px 0 0 -20px;border:4px solid var(--tk);border-radius:50%;pointer-events:none;animation:pilPulse .4s infinite alternate}
@@ -1134,11 +1135,12 @@ body.cartoon .sav,body.cartoon .ccard .cf{border:3px solid #1d1d24}
 .dailyt th,.dailyt td{padding:4px 6px;text-align:left;font-size:13px}
 .vcb.live{background:#F0456F!important;color:#fff;animation:specGlow .7s infinite alternate}
 /* jamais plus large que l'écran (sinon le téléphone dézoome en portrait puis zoome en paysage) */
-html{touch-action:manipulation}
-html,body{max-width:100%;overflow-x:hidden}
 .mview,.mmain{max-width:100%;min-width:0}
+.mview{overflow-x:clip}
+button,.btn,.tok,.fsbt{touch-action:manipulation}
 @media (max-width:640px){.mview .board{flex-wrap:wrap;row-gap:4px;justify-content:center}.mview .board .sndb{flex:none}}
 .mview .herohud,.mview .benchrow{max-width:100%}
+.scrlock{position:fixed;inset:0;z-index:9999;background:rgba(6,16,32,.92);display:flex;align-items:center;justify-content:center;padding:16px;touch-action:none}
 </style>
 </head>
 <body>
@@ -1354,6 +1356,7 @@ const ui={tab:'club',pick:null,match:null,spd:'normal',timer:null,msg:null,cam:f
 function crestHTML(t,big){const ini=t.name.replace(/^Les? /,'').slice(0,2).toUpperCase();return `<div class="crest${big?' big':''}" style="background:${t.color}">${esc(ini)}</div>`}
 
 function render(){
+  if(typeof scrCheck==='function')setTimeout(scrCheck,0);
   if(typeof VC!=='undefined'&&VC.on&&!ui.match)vcStop();
   syncNB();
   document.body.classList.toggle('manga',STYLE==='manga');document.body.classList.toggle('cartoon',STYLE==='cartoon');document.body.classList.toggle('u8',!!S&&S.cat==='U8');
@@ -2128,6 +2131,7 @@ function renderTable(){
 
 /* ---------- Match ---------- */
 function startMatch(){
+  if(typeof scrOver==='function'&&scrOver()){scrCheck();return}
   syncNB();const nm=nextMatch(); if(!nm) return;
   {const fin=nm.special==='boss'||(nm.special==='euro'&&S.euro.stage===1)||(nm.special==='world'&&S.world.stage===1)||(nm.cup&&!nm.special&&S.cup&&S.cup.stage===2);if(fin&&heroOn()&&!ui._dream&&!(navigator.webdriver&&!/story/.test(location.search))){ui._dream=true;openDream(()=>startMatch());return}}
   MATCH_MIN=nm.special==='school'?12:isU8()?30:50;HALF=nm.special==='school'?6:isU8()?15:25;
@@ -5695,7 +5699,7 @@ function openSettings(){const seg=(act,vals,cur)=>`<div class="seg sm">${vals.ma
     <div><b>📱 Viser en inclinant le téléphone</b><small>Pour les tirs : incline pour viser, touche pour tirer.</small>${seg('setgyro',[['0','Non'],['1','Oui']],S.gyro?'1':'0')}</div>
     <div><b>🎤 Commandes à la voix</b><small>${SR?'Pendant les actions ⭐, dis « TIRE », « PASSE », « DRIBBLE », « TACLE »… Le bouton 📣 du match te laisse crier « ALLEZ GREZ ! ».':'Ce navigateur ne reconnaît pas la voix, mais le bouton 📣 du match marche au volume du cri.'}</small>${seg('setvctl',[['0','Non'],['1','Oui']],S.voiceCtl?'1':'0')}</div>
     <div><b>🔊 Son</b>${seg('setsnd',[[0,'Muet'],[1,'Effets'],[2,'Effets + foule']],SND.level?SND.level():2)}</div>
-    <div><b>🎙️ Commentaire en direct</b><small>Une voix commente les actions pendant le match (si la voix est activée).</small>${seg('setcom',[['on','🎙️ Oui'],['off','Non']],S.comLive===false?'off':'on')}</div>
+    <div><b>🎙️ Commentaire en direct</b><small>Une voix commente les actions pendant le match (si la voix est activée). « Discret » : quelques phrases seulement.</small>${seg('setcom',[['0','Non'],['1','Discret'],['2','Normal'],['3','Bavard']],String(comLvl()))}</div>
     <div><b>🎙️ Commentateur</b>${seg('setfun',[['0','Sérieux'],['1','Rigolo']],S.funny?'1':'0')}<small>Voix :</small>${seg('setvoice',Object.entries(VOICES).map(([k,v])=>[k,v[0]]),S.voice||'normal')}</div>
     <div><b>🖌️ Style</b>${seg('gstyle',[['classic','🖍️ Classique'],['manga','⚡ Manga'],['cartoon','🎨 Cartoon']],STYLE)}</div>
     <div><b>🎥 Vue du match</b>${seg('setv3',[['1','3D'],['0','2D']],L3.on?'1':'0')}</div>
@@ -5719,11 +5723,25 @@ function scrCfg(){let l={};try{l=JSON.parse(localStorage.getItem('hmj-screen-cfg
 function scrSet(o){try{if('code' in o)localStorage.setItem('hmj-screen-cfg',JSON.stringify({...scrG(),code:o.code}));if('lim' in o)localStorage.setItem('hmj-screen-cfg-'+SLOT,JSON.stringify({lim:o.lim}))}catch(e){}}
 function screenState(){const d=new Date().toDateString();let st={};try{st=JSON.parse(localStorage.getItem('hmj-screen-'+SLOT)||'{}')}catch(e){}if(st.d!==d)st={d,sec:0,ok:false};return st}
 let SCR_T=performance.now();
-setInterval(()=>{const now=performance.now(),dt=(now-SCR_T)/1000;SCR_T=now;if(document.hidden||!S)return;const st=screenState();st.sec+=Math.min(dt,40);try{localStorage.setItem('hmj-screen-'+SLOT,JSON.stringify(st))}catch(e){}
-  const lim=scrCfg().lim;if(lim&&st.sec>=lim*60&&!st.ok&&!document.querySelector('.scrlock'))screenLock()},15000);
-function screenLock(){const el=document.createElement('div');el.className='scrlock';el.innerHTML=`<div class="box small"><h2>⏰ C’est l’heure de la pause !</h2><p>Tu as bien joué aujourd’hui. Ton équipe se repose aussi : rendez-vous demain pour la suite !</p><p class="hint">Code parent pour continuer :</p><div class="row"><input id="ulock" class="ssel" maxlength="4" inputmode="numeric" style="width:120px"><button class="btn go" id="ulockb">Continuer</button></div></div>`;document.body.appendChild(el);
-  if(ui.match&&ui.match.running){ui.match.running=false;clearTimeout(ui.timer)}
-  el.querySelector('#ulockb').addEventListener('click',()=>{const c=scrCfg().code;if(!c||el.querySelector('#ulock').value===c){const st=screenState();st.ok=true;try{localStorage.setItem('hmj-screen-'+SLOT,JSON.stringify(st))}catch(e){}el.remove();if(ui.match&&!ui.match.done&&!ui.match.running&&!ui.hm){ui.match.running=true;loop()}}else{el.querySelector('#ulock').value='';toast('Code incorrect')}})}
+function scrSave(st){try{localStorage.setItem('hmj-screen-'+SLOT,JSON.stringify(st))}catch(e){}}
+function scrOver(){const lim=scrCfg().lim;if(!lim||!S)return false;const st=screenState();return st.sec>=lim*60+(st.ext||0)&&!st.ok}
+function scrTick(){const now=performance.now(),dt=(now-SCR_T)/1000;SCR_T=now;if(document.hidden||!S)return;const st=screenState();st.sec+=Math.min(dt,12);scrSave(st);scrCheck()}
+/* vérifie tout de suite (au lancement, au retour dans l'appli, avant chaque match…) : fermer/relancer ne remet plus rien à zéro */
+function scrCheck(){if(scrOver()&&!document.querySelector('.scrlock'))screenLock()}
+setInterval(scrTick,5000);
+document.addEventListener('visibilitychange',()=>{if(document.hidden){scrTick()}else{SCR_T=performance.now();setTimeout(scrCheck,50)}});
+addEventListener('pagehide',()=>scrTick());addEventListener('pageshow',()=>{SCR_T=performance.now();setTimeout(scrCheck,50)});
+setTimeout(scrCheck,300);
+function screenLock(){const el=document.createElement('div');el.className='scrlock';const code=scrCfg().code,a=rint(12,19),b2=rint(6,9);
+  el.innerHTML=`<div class="box small"><h2>⏰ C’est l’heure de la pause !</h2><p>Tu as bien joué aujourd’hui. Ton équipe se repose aussi : rendez-vous demain pour la suite !</p>
+   ${code?'<p class="hint">Code parent pour continuer :</p>':`<p class="hint">Pour un parent : combien font ${a} × ${b2} ? (Définis un code parent dans Réglages pour plus de sécurité.)</p>`}
+   <div class="row"><input id="ulock" class="ssel" maxlength="4" inputmode="numeric" style="width:120px" autocomplete="off"></div>
+   <div class="row" style="margin-top:8px;flex-wrap:wrap;gap:6px"><button class="btn" data-ext="15">+15 min</button><button class="btn" data-ext="30">+30 min</button><button class="btn go" data-ext="day">Toute la journée</button></div></div>`;document.body.appendChild(el);
+  if(ui.match&&ui.match.running){ui.match.running=false;clearTimeout(ui.timer)}try{if(typeof FS!=='undefined'&&FS.on)fsExit(true)}catch(e){}
+  el.querySelectorAll('[data-ext]').forEach(bt=>bt.addEventListener('click',()=>{const v=el.querySelector('#ulock').value.trim(),good=code?v===code:+v===a*b2;
+    if(!good){el.querySelector('#ulock').value='';toast(code?'Code incorrect':'Mauvaise réponse');return}
+    const st=screenState(),ex=bt.dataset.ext;if(ex==='day')st.ok=true;else st.ext=Math.max(st.ext||0,st.sec-(scrCfg().lim*60))+ +ex*60;scrSave(st);el.remove();
+    toast(ex==='day'?'✅ Jeu débloqué pour aujourd’hui':`✅ ${ex} minutes de plus`);if(ui.match&&!ui.match.done&&!ui.match.running&&!ui.hm){ui.match.running=true;loop()}}))}
 /* ---------- 1. créateur de coup spécial ---------- */
 const CPATH=[['straight','➡️ Droit'],['lob','🌈 Lob'],['spiral','🌀 Spirale'],['zigzag','⚡ Zigzag'],['curve','🪃 Courbe'],['snake','🐍 Serpent'],['wave','🌊 Vague'],['zig2','👻 Sauts']];
 const CTRAIL=[['fire','🔥 Feu'],['ice','❄️ Glace'],['electric','⚡ Électrique'],['rainbow','🌈 Arc-en-ciel'],['star','✨ Étoiles'],['water','💧 Eau'],['ghost','👻 Fantôme'],['smoke','💨 Fumée'],['wind','🌬️ Vent'],['green','💚 Vert']];
@@ -6578,7 +6596,7 @@ function engHero(M,type,x={}){if(M.special==='coop'&&S.coopG){const prev=S.hero;
   engPush(M,[{...f,c:'hero',d:.9,heroMoment:type,n}],true)}
 /* ---------- passage par la file d'images (buts, corners, actions ⭐) ---------- */
 const ucf=t=>t?t.charAt(0).toUpperCase()+t.slice(1):t;
-function engMinor(M,f){if(M.fast||!f)return;f.t=ucf(f.t);if(f.t&&R()<.55)comSay(f.t,3000);const fr={b:f.b||M.ball||[50,50],t:f.t,c:f.c||'',d:.6,min:M.min,who:f.who||null,oi:f.oi??null};if(!fr.t&&!fr.who&&fr.oi==null)return;M.engMinorF=true;applyFrame(M,fr);M.engMinorF=false}
+function engMinor(M,f){if(M.fast||!f)return;f.t=ucf(f.t);if(f.t)comMinor(M,f.t);const fr={b:f.b||M.ball||[50,50],t:f.t,c:f.c||'',d:.6,min:M.min,who:f.who||null,oi:f.oi??null};if(!fr.t&&!fr.who&&fr.oi==null)return;M.engMinorF=true;applyFrame(M,fr);M.engMinorF=false}
 function engPush(M,F,scripted){F.forEach(f=>{f.min=f.min??M.min;f.t=ucf(f.t)});M.engOn=false;M.engHold=!scripted;M.q=F.concat(M.q);clearTimeout(ui.timer);ui.timer=setTimeout(loop,60)}
 /* ---------- chaque minute de jeu ---------- */
 function engMinute(M){const E=M.eng;M.min++;M.shownMin=M.min;
@@ -6857,28 +6875,34 @@ document.addEventListener('click',e=>{if(pilNow()-PIL_SW<450){const host=$('#mpi
 
 /* ======================= v84 : commentateur en direct · arbre de compétences · vestiaire ======================= */
 /* ---------- 4. commentateur vocal en direct ---------- */
-const COM={t:0,quiet:0};
-function comOn(){return S&&S.comLive!==false}
-function comSay(txt,gap=2600,prio=false){if(!comOn()||!txt||!SND.say)return;const M=ui.match;if(!M||M.fast)return;const n=performance.now();if(!prio&&n-COM.t<gap)return;COM.t=n;
-  SND.say(String(txt).replace(/[\u{1F300}-\u{1FAFF}☀-➿⭐©]/gu,'').replace(/\s+/g,' ').trim(),prio)}
+const COM={t:0,quiet:0,recent:[]};
+/* niveau : 0 coupé · 1 discret (défaut) · 2 normal · 3 bavard */
+function comLvl(){if(!S||S.comLive===false)return 0;return S.comLvl??1}
+function comOn(){return comLvl()>0}
+const COMP={gap:[1e9,9000,5500,3200],hero:[0,.3,.55,.85],minor:[0,0,.12,.3],fill:[1e9,60000,38000,22000]};
+function comSay(txt,gap,prio=false){if(!comOn()||!txt||!SND.say)return false;const M=ui.match;if(!M||M.fast)return false;const n=performance.now(),g=gap??COMP.gap[comLvl()];if(!prio&&n-COM.t<g)return false;
+  const clean=String(txt).replace(/[\u{1F300}-\u{1FAFF}☀-➿⭐©]/gu,'').replace(/\s+/g,' ').trim();if(!clean||COM.recent.includes(clean))return false;
+  COM.recent.push(clean);if(COM.recent.length>10)COM.recent.shift();COM.t=n;SND.say(clean,prio);return true}
+function comPick(arr){const fresh=arr.filter(x=>!COM.recent.some(r=>r.startsWith(x.slice(0,12))));return pick(fresh.length?fresh:arr)}
 function comTone(M){const d=M.us-M.them;return d>=2?'lead':d<=-2?'trail':d===0?'tie':d>0?'up':'down'}
 const COMB={
-  feint:['Quelle feinte de {h} !','{h} efface son défenseur !','Oh le joli dribble de {h} !','{h} le laisse sur place !'],
-  push:['{h} pousse la balle et s’envole !','{h} accélère, personne ne suit !'],
-  tackle:['Tacle propre de {h} !','{h} récupère le ballon !','Bien joué {h}, balle récupérée !'],
-  icp:['{h} lit le jeu et intercepte !','Interception de {h} !'],
-  pass:['Superbe passe de {h} !','{h} trouve son coéquipier !'],
-  shot:['{h} arme sa frappe…','{h} tente sa chance !'],
-  perfect:['Frappe parfaite de {h} !','Quelle puissance !'],
-  duel:['Duel !','Face à face !'],
-  lost:['Ballon perdu…','Pas cette fois !'],
+  feint:['Quelle feinte de {h} !','{h} efface son vis-à-vis !','Oh, le joli crochet de {h} !','{h} le laisse sur place !','Petit pont… non, grosse feinte de {h} !','{h} passe comme une flèche !','Magnifique dribble de {h} !','Le défenseur est parti dans le mauvais sens !'],
+  push:['{h} pousse la balle et s’envole !','{h} accélère, personne ne suit !','Quelle pointe de vitesse pour {h} !','{h} part dans l’espace !','Ça file sur l’aile !'],
+  tackle:['Tacle propre de {h} !','{h} récupère le ballon !','Bien vu {h}, balle récupérée !','Intervention parfaite de {h} !','{h} ne laisse rien passer !','Quel retour défensif de {h} !'],
+  icp:['{h} lit le jeu et intercepte !','Interception de {h} !','{h} avait tout compris !','Passe coupée par {h} !'],
+  pass:['Superbe passe de {h} !','{h} trouve son coéquipier !','Belle vision de {h} !','Une passe millimétrée !','{h} distribue le jeu !'],
+  shot:['{h} arme sa frappe…','{h} tente sa chance !','{h} déclenche !','Tir de {h} !'],
+  perfect:['Frappe parfaite de {h} !','Quelle puissance !','Un boulet de canon !','Celle-là, elle est partie fort !'],
+  duel:['Duel !','Face à face…','Un contre un !'],
+  lost:['Ballon perdu…','Pas cette fois !','Le défenseur a bien lu.'],
   spec:['Attention, coup spécial !','Le coup spécial de {h} !']};
-const COMF={lead:['{me} déroule son jeu !','{me} est vraiment bien en place aujourd’hui.','Quelle domination de {me} !'],trail:['{me} doit réagir maintenant !','Allez {me}, on y croit !','Il faut accélérer pour {me}.'],
-  tie:['Le match est très serré.','Tout reste possible !','Personne ne lâche rien.'],up:['{me} mène, mais rien n’est fait.','Il faut tenir le score.'],down:['{me} est mené, mais ça peut revenir !','Encore un effort !']};
-const COMFUN={lead:['Même la mascotte applaudit !','On commande déjà les frites pour fêter ça ?'],trail:['Le coach se gratte la tête…','Même les pigeons retiennent leur souffle !'],tie:['Suspense insoutenable !'],up:['Les supporters chantent !'],down:['Allez, on se réveille !']};
-function comHero(M,k){if(!comOn()||M.fast)return;const H=heroP(),b=COMB[k];if(!b)return;comSay(pick(b).replace('{h}',H?first(H):'notre joueur'),k==='duel'?1200:2200)}
-function comFiller(M){if(!comOn()||M.fast)return;const n=performance.now();if(n-COM.t<16000)return;const me=S.teams[0].name,tn=comTone(M),left=MATCH_MIN-M.min;
-  let t=left===5?`Plus que cinq minutes de jeu ! ${M.us} à ${M.them}.`:left===10?'Dix minutes à jouer.':pick((S.funny&&R()<.4?COMFUN:COMF)[tn]).replace('{me}',me);comSay(t,0)}
+const COMF={lead:['{me} déroule son jeu.','{me} maîtrise ce match.','Belle domination de {me}.','{me} fait tourner le ballon.'],trail:['{me} doit réagir.','Allez {me}, on y croit !','Il faut accélérer pour {me}.','Le public pousse derrière {me} !'],
+  tie:['Le match est très serré.','Tout reste possible.','Personne ne lâche rien.','Quel suspense !'],up:['{me} mène, mais rien n’est fait.','Il faut tenir ce score.','{me} garde la tête devant.'],down:['{me} est mené, mais ça peut revenir.','Encore un effort pour {me} !','Rien n’est perdu !']};
+const COMFUN={lead:['Même la mascotte applaudit !','On commande déjà les frites pour fêter ça ?','Le coach adverse cherche ses lunettes…'],trail:['Le coach se gratte la tête…','Même les pigeons retiennent leur souffle !','Quelqu’un a vu le ballon ?'],tie:['Suspense insoutenable, j’en mange mon micro !'],up:['Les supporters chantent faux mais fort !'],down:['Allez, on se réveille !','Un petit chocolat chaud et ça repart !']};
+function comHero(M,k){const L=comLvl();if(!L||M.fast)return;const H=heroP(),b=COMB[k];if(!b)return;const big=k==='perfect'||k==='spec';if(!big&&R()>COMP.hero[L])return;comSay(comPick(b).replace('{h}',H?first(H):'notre joueur').replace(/\b(de|que) ([AEIOUYÉÈÊÂÎaeiouyéè])/g,(m0,w,c)=>(w==='de'?'d’':'qu’')+c),big?COMP.gap[L]*.5:undefined)}
+function comMinor(M,t){const L=comLvl();if(!L||M.fast||!t)return;if(!/frappe|tir|arr[eê]t|intercepte|corner|carton|poteau|côté/i.test(t))return;if(R()>COMP.minor[L])return;comSay(t)}
+function comFiller(M){const L=comLvl();if(!L||M.fast)return;const n=performance.now();if(n-COM.t<COMP.fill[L])return;const me=S.teams[0].name,tn=comTone(M),left=MATCH_MIN-M.min;
+  let t=left===5?`Plus que cinq minutes ! ${M.us} à ${M.them}.`:left===10&&L>1?'Dix minutes à jouer.':comPick((S.funny&&R()<.4?COMFUN:COMF)[tn]).replace('{me}',me);comSay(t,0)}
 /* ---------- 6. arbre de compétences du joueur ⭐ ---------- */
 const SKB={drib:['⚔️','Dribbleur','Feintes plus sûres et « pousse et file » plus difficile à couper.'],but:['🥅','Buteur','Zone verte du tir plus large et frappes plus puissantes.'],mur:['🛡️','Mur','Tacles plus réussis, même d’un peu plus loin.'],men:['🤝','Meneur','Passes plus précises, moins souvent interceptées.']};
 const SKMAX=5;
@@ -7396,7 +7420,7 @@ document.addEventListener('click',e=>{
   else if(a==='vest'){openVest()}
   else if(a==='vtab'){openVest(v)}
   else if(a==='vbuy'){vestBuy(b.dataset.c,v)}
-  else if(a==='setcom'){S.comLive=v!=='off';save();openSettings()}
+  else if(a==='setcom'){S.comLvl=+v;S.comLive=+v>0;save();openSettings()}
   else if(a==='amical'){openDuoIntro()}
   else if(a==='dstart'){if(D)clearTimeout(D.timer);duoCloseSheet();startDuo()}
   else if(a==='dexit'){duoExit()}
