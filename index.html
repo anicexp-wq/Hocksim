@@ -1160,6 +1160,7 @@ const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(R()*
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 /* deux parties séparées : U12 et U10 */
 const SLOTS={u12:{cat:'U12',key:'hockey-manager-junior-u12-v1'},u10:{cat:'U10',key:'hockey-manager-junior-u10-v1'},u8:{cat:'U8',key:'hockey-manager-junior-u8-v1'}};
+const APP_V='v92';
 let SLOT=(()=>{try{return localStorage.getItem('hmj-slot')||'u12'}catch(e){return 'u12'}})();
 const keyOf=()=>SLOTS[SLOT].key;
 function save(){try{localStorage.setItem(keyOf(),JSON.stringify(S))}catch(e){}}
@@ -5716,6 +5717,7 @@ function openSettings(){const seg=(act,vals,cur)=>`<div class="seg sm">${vals.ma
     <div class="parent"><b>👨‍👩‍👧 Temps d’écran de ${esc(heroP()?first(heroP()):catOf())} (${catOf()})</b><small>Chaque enfant a son propre temps (change de partie U12/U10 pour régler l’autre). Joué aujourd’hui : ${Math.round(st.sec/60)} min${lim?` sur ${lim}`:''}. Quand la limite est atteinte, le jeu propose une pause ; seul le code parent permet de continuer.</small>
      ${seg('setlim',[[0,'Sans limite'],[20,'20 min'],[30,'30 min'],[45,'45 min'],[60,'1 h']],lim)}
      <div class="row" style="margin-top:6px"><input id="pcode" class="ssel" maxlength="4" inputmode="numeric" placeholder="${scrCfg().code?'Code défini ✔':'Code parent (4 chiffres)'}" style="width:170px"><button class="btn sm" data-act="setcode">Enregistrer le code</button></div></div>
+    <p class="hint" style="text-align:center;margin-top:10px">Version du jeu : <b>${APP_V}</b>${navigator.serviceWorker&&navigator.serviceWorker.controller?' · appli installée':''}</p>
    </div></div>`}
 /* temps d'écran (commun aux deux parties) */
 function scrG(){try{return JSON.parse(localStorage.getItem('hmj-screen-cfg')||'{}')}catch(e){return {}}}
@@ -7459,7 +7461,7 @@ document.addEventListener('click',e=>{
 });
 render();
 /* ---------- PWA : hors ligne + installation ---------- */
-if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}
+if('serviceWorker' in navigator){const hadCtl=!!navigator.serviceWorker.controller;window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').then(r=>{try{r.update()}catch(e){}}).catch(()=>{}));navigator.serviceWorker.addEventListener('controllerchange',()=>{if(hadCtl&&!window.__swr&&!ui.match){window.__swr=1;location.reload()}})}
 let installEvt=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('#installBtn').hidden=false});
 $('#installBtn').addEventListener('click',async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice;installEvt=null;$('#installBtn').hidden=true});
