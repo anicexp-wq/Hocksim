@@ -1024,7 +1024,7 @@ img,svg,canvas{-webkit-user-drag:none;user-drag:none}
 .pilch span.ok{background:#1E9E68;border-color:#FFC928}
 .pilhint{display:flex;align-items:center;gap:8px;justify-content:center}
 .pilhint .pp{font-style:normal;font-size:20px;display:inline-block;flex:none}
-.pp.up{animation:ppUp .9s ease-in-out infinite}.pp.side{animation:ppSide .8s ease-in-out infinite}.pp.tap{animation:ppTap .7s ease-in-out infinite}.pp.hold{animation:ppHold 1.2s ease-in-out infinite}
+.pp.up{animation:ppUp .9s ease-in-out infinite}.pp.rt{animation:ppRt .9s ease-in-out infinite}@keyframes ppRt{0%{transform:translateX(-6px);opacity:.4}60%{transform:translateX(8px);opacity:1}100%{transform:translateX(8px);opacity:0}}.pp.side{animation:ppSide .8s ease-in-out infinite}.pp.tap{animation:ppTap .7s ease-in-out infinite}.pp.hold{animation:ppHold 1.2s ease-in-out infinite}
 @keyframes ppUp{0%{transform:translateY(6px);opacity:.4}60%{transform:translateY(-8px);opacity:1}100%{transform:translateY(-8px);opacity:0}}
 @keyframes ppSide{0%{transform:translateX(-9px) rotate(-10deg)}50%{transform:translateX(9px) rotate(10deg)}100%{transform:translateX(-9px) rotate(-10deg)}}
 @keyframes ppTap{0%,100%{transform:scale(1)}50%{transform:scale(.75) translateY(3px)}}
@@ -1162,7 +1162,7 @@ const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(R()*
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 /* deux parties séparées : U12 et U10 */
 const SLOTS={u12:{cat:'U12',key:'hockey-manager-junior-u12-v1'},u10:{cat:'U10',key:'hockey-manager-junior-u10-v1'},u8:{cat:'U8',key:'hockey-manager-junior-u8-v1'}};
-const APP_V='v95';
+const APP_V='v98';
 let SLOT=(()=>{try{return localStorage.getItem('hmj-slot')||'u12'}catch(e){return 'u12'}})();
 const keyOf=()=>SLOTS[SLOT].key;
 function save(){try{localStorage.setItem(keyOf(),JSON.stringify(S))}catch(e){}}
@@ -4715,7 +4715,7 @@ function live3D(host,t,els,ball,roster,st){
   if(pcam){const pc=pilCam(ui.match,por,dt);if(pc){C=pc.C;TT=pc.T;vis=pc.v}}else L3.pcF=null;
   const M0=ui.match&&!side&&st===ui.match?ui.match:null,GL=!!(M0&&g3Wanted()&&!G3.busy&&g3Init());
   if(M0&&M0.intro){const ic=tvIntroCam(t,por);C=ic.C;TT=ic.T;vis=ic.v}
-  vis*=tvZoomK();if(M0)tvGoalCheck(M0,t);
+  vis*=pcam?1:tvZoomK();if(M0)tvGoalCheck(M0,t);
   const ddx=TT[0]-C[0],ddz=TT[2]-C[2],hd=Math.hypot(ddx,ddz),th=Math.atan2(ddx,ddz),ph=Math.atan2(C[1]-TT[1],hd),dist=Math.hypot(hd,C[1]-TT[1]),f=W*dist/vis;
   const s1=Math.sin(th),c1=Math.cos(th),s2=Math.sin(ph),c2=Math.cos(ph);
   const CAM=(X,Y,Z)=>{const ex=X-C[0],ey=Y-C[1],ez=Z-C[2],cx=ex*c1-ez*s1,cz=ex*s1+ez*c1;return [cx,ey*c2+cz*s2,cz*c2-ey*s2]}, NZ=.45, PR=v=>[W/2+v[0]*f/v[2],H*.5-v[1]*f/v[2]];
@@ -4795,7 +4795,7 @@ function live3D(host,t,els,ball,roster,st){
   if(L3.passT&&L3.passT.length){const hq=items.find(i=>i.key===hk);L3.passT.forEach((pt,i)=>{const it=items.find(x=>x.key===pt.key);if(!it)return;const col=riskTxt(pt.risk)[2],w=Math.max(12,(it.q[1]-(P(it.X,1.55,it.Z)||it.q)[1])/1.3);
     if(hq){c.setLineDash([8,6]);c.strokeStyle=col;c.lineWidth=3;c.beginPath();c.moveTo(hq.q[0],hq.q[1]);c.lineTo(it.q[0],it.q[1]);c.stroke();c.setLineDash([])}
     c.beginPath();c.ellipse(it.q[0],it.q[1],w*.8,w*.28,0,0,7);c.lineWidth=4;c.strokeStyle=col;c.stroke();c.font='900 18px "Baloo 2",sans-serif';c.textAlign='center';c.lineWidth=4;c.strokeStyle='#000';c.strokeText(String(i+1),it.q[0],it.q[1]+22);c.fillStyle=col;c.fillText(String(i+1),it.q[0],it.q[1]+22)})}
-  if(!side&&ui.match&&L3.pil&&pilOn(ui.match))pil3D(c,P,t,items);
+  if(!side&&ui.match&&L3.pil&&pilOn(ui.match)){pil3D(c,P,t,items);camHeroEdge(c,P,W,H,t,ui.match)}
   if(ui.match)drawCheerFX(c,W,H,dt,t);
   if(STYL()){drawOno(c,P,t);const recent=L3.flash&&t-L3.flash<450;if(recent||(bl>.6&&hasBall&&hm&&hm.mv))speedLines(c,W,H,t,recent?1:.55)}
   c.setTransform(dpr,0,0,dpr,0,0);
@@ -5742,7 +5742,8 @@ function tip(k){if(!S||S.tipsOff||document.querySelector('.cmk'))return;S.tips=S
 /* ---------- 15. réglages ---------- */
 const DIFFMODES={facile:['🙂 Facile',1.2],normal:['😐 Normal',1],expert:['🔥 Expert',.82]};
 function openSettings(){const seg=(act,vals,cur)=>`<div class="seg sm">${vals.map(([v,l])=>`<button data-act="${act}" data-v="${v}" aria-pressed="${String(cur)===String(v)}">${l}</button>`).join('')}</div>`;
-  const st=screenState(),lim=scrCfg().lim||0;const m=$('#modal');m.hidden=false;
+  const st=screenState(),lim=scrCfg().lim||0;const m=$('#modal');const ob=!m.hidden&&m.querySelector('.box[aria-label="Réglages"]'),sy=ob?ob.scrollTop:0;m.hidden=false;
+  requestAnimationFrame(()=>{const nb=m.querySelector('.box[aria-label="Réglages"]');if(nb&&sy)nb.scrollTop=sy});
   m.innerHTML=`<div class="box mid fit" role="dialog" aria-modal="true" aria-label="Réglages"><div class="row" style="justify-content:space-between;flex:none"><h2>⚙️ Réglages</h2><button class="btn go" data-act="closeinfo">OK</button></div>
    <div class="setl">
     <div><b>🎚️ Difficulté</b><small>Change la taille des cibles et les chances de réussite.</small>${seg('setdiff',Object.entries(DIFFMODES).map(([k,v])=>[k,v[0]]),S.diffMode||'normal')}</div>
@@ -5754,7 +5755,9 @@ function openSettings(){const seg=(act,vals,cur)=>`<div class="seg sm">${vals.ma
     <div><b>🖌️ Style</b>${seg('gstyle',[['classic','🖍️ Classique'],['manga','⚡ Manga'],['cartoon','🎨 Cartoon']],STYLE)}</div>
     <div><b>🎥 Vue du match</b>${seg('setv3',[['gl','🎮 3D réelle'],['1','🖍️ 3D dessinée'],['0','2D']],L3.on?(G3.pref&&!G3.fail&&G3.q>0?'gl':'1'):'0')}<small>La 3D réelle demande un téléphone récent : si ça rame, le jeu repasse tout seul en 3D dessinée.${G3.fail?' (Indisponible sur cet appareil.)':''}</small></div>
     <div><b>📺 Réalisation télé</b><small>Ralenti et zoom sur les tirs, bandeaux de score, présentation des équipes, feux d’artifice.</small>${seg('settv',[['1','Oui'],['0','Non']],G3.tv?'1':'0')}</div>
-    <div><b>📷 Caméra 3D</b>${seg('setcam',[['auto','🔄 Auto'],['tv','📺 TV'],['hero','⭐ Joueur']],L3.mode)}</div>
+    <div><b>📷 Caméra 3D</b><small>Quand le match se joue tout seul.</small>${seg('setcam',[['auto','🔄 Auto'],['tv','📺 TV'],['hero','⭐ Joueur']],L3.mode)}</div>
+    <div><b>📱 Vue quand le téléphone est couché</b><small>De côté comme à la télé (ton équipe attaque vers la droite), ou derrière toi vers le but.</small>${seg('setlsv',[['side','📺 De côté'],['goal','🥅 Vers le but']],S.lsView||'side')}</div>
+    <div><b>🎯 Caméra quand tu joues</b><small>La caméra garde toujours la balle et ton joueur ⭐ à l’écran, montre le but et les copains quand tu attaques, ton but quand tu défends, et bouge le moins possible pendant que tu vises. Choisis si tu la préfères plus près ou plus loin.</small>${seg('setpzoom',[['0','🔍 Proche'],['1','🎯 Auto'],['2','🔭 Large']],String(S.fsZoom??1))}</div>
     <div><b>⚙️ Mode léger</b><small>Moins d’effets, pour les téléphones plus anciens.</small>${seg('setlite',[['0','Non'],['1','Oui']],L3.lite?'1':'0')}</div>
     <div><b>📖 Mode histoire</b>${seg('setstory',[['1','Activé'],['0','Coupé']],S.storyOff?'0':'1')}</div>
     <div><b>📣 Chants des supporters</b>${seg('setchant',[['1','Activés'],['0','Coupés']],S.chantOn===false?'0':'1')}</div>
@@ -6668,11 +6671,6 @@ function engMinute(M){const E=M.eng;M.min++;M.shownMin=M.min;
   updateMatchView();try{comFiller(M)}catch(e){}return false}
 
 /* caméra « derrière le joueur » en mode pilote : on voit la balle, ⭐ et les coéquipiers devant */
-function pilCam(M,por,dt){const E=M.eng;if(!E)return null;const hi=pilHi(M),B=E.ball,h=hi>=0?E.u[hi]:B,fx=clamp(h.x*.55+B.x*.45,3,RPL-7),fz=clamp(h.y*.6+B.y*.4,7,RPW-7);
-  const k=Math.min(1,dt*2.6);L3.pcF=L3.pcF?[L3.pcF[0]+(fx-L3.pcF[0])*k,L3.pcF[1]+(fz-L3.pcF[1])*k]:[fx,fz];const [X,Z]=L3.pcF;
-  if(typeof FS!=='undefined'&&FS.on){const zl=S.fsZoom??1;L3.figK=[1.55,1.85,2.2][zl];
-    const fx2=clamp(X,[3,6,10][zl],RPL-[6,8,12][zl]);return [{C:[fx2-10,8,Z],T:[fx2+7,0,Z],v:28},{C:[fx2-12,16,Z],T:[fx2+1.5,0,Z],v:40},{C:[fx2-12,27,Z],T:[fx2+.5,0,Z],v:54}][zl]}
-  L3.figK=1.55;return por?{C:[X-8,12,Z],T:[X+4,0,Z],v:17}:{C:[X-10,8,Z],T:[X+7,0,Z],v:28}}
 /* ======================= v78 : difficulté auto · défis perso · consignes parlées · paysage ======================= */
 /* ---------- 6. difficulté qui s'adapte au niveau réel de l'enfant ---------- */
 function adaptK(M){if(!S||S.adaptOn===false)return 1;let k=(S.adapt&&S.adapt.k)||1;if(M&&M.us!=null){const gd=M.us-M.them;if(gd>=3)k*=1.05;else if(gd<=-3)k*=.95}return k}
@@ -6698,7 +6696,7 @@ function pchEndHTML(M){return M.pch?`<p style="margin:6px 0 0"><b>🎯 Défis :<
 /* ---------- 8. consignes lues à voix haute + pictogrammes animés ---------- */
 const PIL_SAY={carry:'Tu as la balle ! Glisse vers l’avant pour accélérer, ou touche un copain pour passer.',duel:'Duel ! Va du côté sans mur rouge !',mate:'Touche ton joueur pour demander la balle !',opp:'Touche l’adversaire qui a la balle pour la lui prendre !',loose:'Cours vers la balle !',shoot:'Reste appuyé sur le but, et lâche dans le vert !'};
 function pilVoice(M,k){if(!readOn()||!SND.say||M.fast)return;const P=pilS(M),now=pilNow();if(k===P.vk&&now-(P.vT||0)<9000)return;if(now-(P.vT||0)<3500&&k!=='duel')return;P.vk=k;P.vT=now;SND.say(PIL_SAY[k],true)}
-function pilPicto(k){return {carry:'<i class="pp up">👆</i>',duel:'<i class="pp side">👆</i>',mate:'<i class="pp tap">👆</i>',opp:'<i class="pp tap">👆</i>',loose:'<i class="pp tap">👆</i>',shoot:'<i class="pp hold">👆</i>'}[k]||''}
+function pilPicto(k){return {carry:L3.cam2&&L3.cam2.sd?'<i class="pp rt">👉</i>':'<i class="pp up">👆</i>',duel:'<i class="pp side">👆</i>',mate:'<i class="pp tap">👆</i>',opp:'<i class="pp tap">👆</i>',loose:'<i class="pp tap">👆</i>',shoot:'<i class="pp hold">👆</i>'}[k]||''}
 /* ======================= MODE PILOTE : l'enfant joue vraiment son joueur ⭐ en direct ======================= */
 /* touche le terrain : se déplacer · un coéquipier : passer · le but (reste appuyé) : tirer · le porteur adverse : tacler */
 const PIL_IDLE=5000, PIL_HOLD=2600;
@@ -7028,12 +7026,12 @@ function fsBuild(){let u=$('#fsui');if(u)u.remove();u=document.createElement('di
      <button class="fsbt b3" data-a="sprint">💨<br>SPRINT</button>
      <button class="fsbt b1" data-a="main">TIR</button></div>`;
   document.body.appendChild(u);
-  u.querySelector('.fstop').addEventListener('pointerdown',e=>{const b=e.target.closest('[data-fs]');if(!b)return;e.preventDefault();const k=b.dataset.fs;if(k==='vc'){vcToggle();return}if(k==='exit')fsExit(true);else if(k==='zoom'){S.fsZoom=((S.fsZoom??1)+1)%3;save();L3.pcF=null;fsTopLab();callout(['🔍 VUE PROCHE','🔭 VUE LARGE','🛰️ VUE TRÈS LARGE'][S.fsZoom],'pass',true)}
+  u.querySelector('.fstop').addEventListener('pointerdown',e=>{const b=e.target.closest('[data-fs]');if(!b)return;e.preventDefault();const k=b.dataset.fs;if(k==='vc'){vcToggle();return}if(k==='exit')fsExit(true);else if(k==='zoom'){S.fsZoom=((S.fsZoom??1)+1)%3;save();L3.cam2=null;fsTopLab();callout(['🔍 CAMÉRA PROCHE','🎯 CAMÉRA AUTO','🔭 CAMÉRA LARGE'][S.fsZoom],'pass',true)}
     else if(k==='spd'){const L=[.55,.7,.85,1],i=L.indexOf(S.fsSpd??.7);S.fsSpd=L[(i+1)%L.length];save();fsTopLab();callout({.55:'🐌 TRÈS LENT',.7:'🐢 LENT',.85:'🙂 NORMAL',1:'🐇 RAPIDE'}[S.fsSpd],'pass',true)}else fsEnter(true)});fsTopLab();
   const jz=u.querySelector('#fsjoy');jz.addEventListener('pointerdown',fsJoyStart);
   const az=u.querySelector('#fsact');az.addEventListener('pointerdown',fsActDown);
   u.addEventListener('contextmenu',e=>e.preventDefault())}
-function fsTopLab(){const z=$('#fszoom'),v=$('#fsspd');if(z)z.textContent=['🔍','🔭','🛰️'][S.fsZoom??1];if(v)v.textContent={.55:'🐌',.7:'🐢',.85:'🙂',1:'🐇'}[S.fsSpd??.7]||'🐢'}
+function fsTopLab(){const z=$('#fszoom'),v=$('#fsspd');if(z)z.textContent=['🔍','🎯','🔭'][S.fsZoom??1];if(v)v.textContent={.55:'🐌',.7:'🐢',.85:'🙂',1:'🐇'}[S.fsSpd??.7]||'🐢'}
 function fsTuto(){const u=$('#fsui');if(!u)return;const M=ui.match;if(M)M.running=false;const t=document.createElement('div');t.className='fstuto';
   t.innerHTML=`<div><b>🎮 Mode manette !</b><p>👈 <b>Pouce gauche</b> : pose-le n’importe où à gauche et glisse pour faire courir ⭐.</p><p>👉 <b>Pouce droit</b> : <b>PASSE</b>, <b>TIR</b> (reste appuyé, lâche dans le vert), <b>SPRINT</b> (reste appuyé), <b>TACLE</b> en défense.</p><p>⚔️ <b>DRIBBLE</b> : appuie dessus et <b>glisse</b> ton pouce : vers le but = pousse et file, sur le côté = feinte (du côté sans mur rouge !), en arrière = protège la balle.</p><button class="btn go bigbtn">C’est parti ! ▶</button></div>`;
   u.appendChild(t);t.querySelector('button').addEventListener('pointerdown',e=>{e.preventDefault();S.fsTuto=1;save();t.remove();if(M&&!M.done){M.running=true;loop()}})}
@@ -7345,7 +7343,7 @@ document.addEventListener('click',e=>{
   else if(a==='pclive'){S.pcLive=v==='1';save();refreshEditor()}
   else if(a==='slot-sw'){switchSlot(v)}
   else if(a==='pview'){ui.pview=v;render()}
-  else if(a==='gstyle'){if(STYLE===v)return;const inLook=!!$('.lookbox');setStyle(v);L3.roster=null;render();if(inLook)openLook();toast(v==='manga'?'⚡ Style manga activé':v==='cartoon'?'🎨 Style cartoon activé':'🖍️ Style classique activé')}
+  else if(a==='gstyle'){if(STYLE===v)return;const inLook=!!$('.lookbox');const inSet=!!$('#modal .box[aria-label="Réglages"]');setStyle(v);L3.roster=null;render();if(inLook)openLook();else if(inSet)openSettings();toast(v==='manga'?'⚡ Style manga activé':v==='cartoon'?'🎨 Style cartoon activé':'🖍️ Style classique activé')}
   else if(a==='order'){giveOrder(v)}
   else if(a==='chant'){openChant()}
   else if(a==='crec'){recChant()}
@@ -7421,6 +7419,8 @@ document.addEventListener('click',e=>{
   else if(a==='setstory'){S.storyOff=v==='0';save();openSettings()}
   else if(a==='setchant'){S.chantOn=v==='1';save();openSettings()}
   else if(a==='setengine'){S.engine=v;save();openSettings()}
+  else if(a==='setlsv'){S.lsView=v;save();L3.cam2=null;openSettings()}
+  else if(a==='setpzoom'){S.fsZoom=+v;save();L3.cam2=null;openSettings()}
   else if(a==='setpilot'){S.pilot=v!=='off';save();openSettings()}
   else if(a==='setadapt'){S.adaptOn=v!=='off';save();openSettings()}
   else if(a==='setctd'){S.ctd=v;save();openSettings()}
@@ -7895,6 +7895,58 @@ let installEvt=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;$('#installBtn').hidden=false});
 $('#installBtn').addEventListener('click',async()=>{if(!installEvt)return;installEvt.prompt();await installEvt.userChoice;installEvt=null;$('#installBtn').hidden=true});
 window.addEventListener('appinstalled',()=>{$('#installBtn').hidden=true});
+/* ======================= v97 : caméra « réalisateur » du mode pilote ======================= */
+/* Idée : la caméra garde TOUJOURS la balle et ton joueur ⭐ à l'écran, en dehors des zones des boutons,
+   montre l'espace utile selon la phase de jeu (en attaque : le but et les copains devant ; en défense : ton but),
+   bouge le moins possible (zone morte), ne zoome que quand c'est utile, et se calme pendant que ton doigt vise. */
+function camSD(cur,vel,tgt,w,dt){const x=w*dt,ex=1/(1+x+.48*x*x+.235*x*x*x),ch=cur-tgt,tmp=(vel+w*ch)*dt;return [tgt+(ch+tmp)*ex,(vel-w*tmp)*ex]}
+function camGeo(fx,fz,vis,por,fs,sd){if(sd){const a=1.35,b=.98+vis/220;return {C:[fx,b*vis,fz-a*vis],T:[fx,0,fz+vis*.04],v:vis}}const a=por?.6:.62,b=(por?.52:fs?.3:.34)+vis/(por?150:190),ah=por?.18:.12;return {C:[fx-a*vis+ah*vis,b*vis,fz],T:[fx+ah*vis,0,fz],v:vis}}
+function camProj(g,W,H){const C=g.C,T=g.T,ddx=T[0]-C[0],ddz=T[2]-C[2],hd=Math.hypot(ddx,ddz),th=Math.atan2(ddx,ddz),ph=Math.atan2(C[1]-T[1],hd),dist=Math.hypot(hd,C[1]-T[1]),f=W*dist/g.v,s1=Math.sin(th),c1=Math.cos(th),s2=Math.sin(ph),c2=Math.cos(ph);
+  return (X,Z)=>{const ex=X-C[0],ey=-C[1],ez=Z-C[2],cx=ex*c1-ez*s1,cz=ex*s1+ez*c1,y=ey*c2+cz*s2,z=cz*c2-ey*s2;if(z<.5)return null;return [W/2+cx*f/z,H*.5-y*f/z]}}
+function camSafe(W,H,por,fs){return por?{l:.09,r:.91,t:.13,b:.8}:fs?{l:.07,r:.93,t:.17,b:.88,cl:[.23,.5],cr:[.62,.44]}:{l:.07,r:.93,t:.12,b:.84}}
+function camIn(q,W,H,sf){if(!q)return false;const x=q[0]/W,y=q[1]/H;if(x<sf.l||x>sf.r||y<sf.t||y>sf.b)return false;if(sf.cl&&x<sf.cl[0]&&y>sf.cl[1])return false;if(sf.cr&&x>sf.cr[0]&&y>sf.cr[1])return false;return true}
+/* plus petit zoom (largeur vue) qui fait tenir tous les points dans le cadre utile */
+function camFit(pts,fx,fz,lo,hi,W,H,por,fs,sd){const sf=camSafe(W,H,por,fs);const ok=v=>{const P=camProj(camGeo(fx,fz,v,por,fs,sd),W,H);return pts.every(p=>camIn(P(p[0],p[1]),W,H,sf))};
+  if(ok(lo))return lo;if(!ok(hi))return null;let a=lo,b=hi;for(let i=0;i<9;i++){const m=(a+b)/2;if(ok(m))b=m;else a=m}return b}
+function camCenter(pts,por){let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;pts.forEach(p=>{x0=Math.min(x0,p[0]);x1=Math.max(x1,p[0]);z0=Math.min(z0,p[1]);z1=Math.max(z1,p[1])});return [(x0+x1)/2,(z0+z1)/2]}
+const CAMZ={por:[[14,20],[16,26],[22,34]],land:[[18,30],[22,42],[32,58]],side:[[20,30],[24,40],[32,54]]};
+function pilCam(M,por,dt){const E=M.eng;if(!E)return null;const r=L3.hr;if(!r)return null;const W=Math.max(60,r.width),H=Math.max(60,r.height),fs=typeof FS!=='undefined'&&FS.on,zl=S.fsZoom??1,sd=!por&&(S.lsView||'side')==='side',[lo,hi]=CAMZ[por?'por':sd?'side':'land'][zl];
+  const hi_=pilHi(M),B=E.ball,Hh=hi_>=0?E.u[hi_]:null,own=B.own,us=own&&own.s==='u',them=own&&own.s==='o',heroHas=us&&own.i===hi_;
+  const bvx=B.fl?0:(B.own?(own.s==='u'?E.u:E.o)[own.i].vx||0:0),bvy=B.fl?0:(B.own?(own.s==='u'?E.u:E.o)[own.i].vy||0:0),must=[[B.x,B.y],[B.x+bvx*.5,B.y+bvy*.5]],opt=[];
+  if(B.fl&&B.fl.x1!=null)must.push([B.fl.x1,B.fl.y1]);
+  if(heroHas){opt.push([Math.min(RPL-.5,Hh.x+11),Hh.y*.65+RGZ*.35]);
+    E.u.forEach((p,i)=>{if(i===hi_||i===0)return;const dx=p.x-Hh.x,d=Math.hypot(dx,p.y-Hh.y);if(dx>-4&&d<19)opt.push([p.x,p.y,d])});
+    let no=null,nd=9;E.o.forEach(p=>{const d=Math.hypot(p.x-Hh.x,p.y-Hh.y);if(d<nd){nd=d;no=p}});if(no)opt.unshift([no.x,no.y])}
+  else if(us)opt.push([Math.min(RPL-.5,B.x+9),B.y]);
+  else if(them){if(B.x<22)opt.push([1,RGZ]);else opt.push([Math.max(1,B.x-7),B.y])}
+  opt.sort((a,b)=>(a[2]||0)-(b[2]||0));
+  /* priorité : balle (+ destination), puis ton joueur, puis le contexte tant que ça tient */
+  let set=must.slice(),c=camCenter(set),v=camFit(set,c[0],c[1],lo,hi,W,H,por,fs,sd);
+  if(v==null){set=[[B.x,B.y]];c=camCenter(set);v=lo}
+  if(Hh){const s2=set.concat([[Hh.x,Hh.y]]),c2=camCenter(s2),v2=camFit(s2,c2[0],c2[1],lo,hi,W,H,por,fs,sd);if(v2!=null){set=s2;c=c2;v=v2}else{const k=.35;c=[c[0]+(Hh.x-c[0])*k,c[1]+(Hh.y-c[1])*k];v=hi}}
+  for(const p of opt.slice(0,4)){const s2=set.concat([[p[0],p[1]]]),c2=camCenter(s2),v2=camFit(s2,c2[0],c2[1],lo,hi,W,H,por,fs,sd);if(v2!=null&&v2<=Math.max(v*1.25,lo*1.15)){set=s2;c=c2;v=v2}}
+  /* un peu d'espace devant soi */
+  let fx=c[0]+(us?(sd?3:1.5):them?(sd?-2:-1):0),fz=c[1];fx=clamp(fx,4,RPL-4);fz=clamp(fz,5,RPW-5);
+  /* zone morte + hystérésis du zoom */
+  const S2=L3.cam2&&L3.cam2.por===por&&L3.cam2.zl===zl&&L3.cam2.fs===fs&&L3.cam2.sd===sd?L3.cam2:(L3.cam2={por,zl,fs,sd,ax:fx,az:fz,av:v,x:fx,z:fz,vv:v,vx:0,vz:0,vz2:0,inT:0});
+  const dzx=S2.av*(sd?.08:.1),dzz=S2.av*(sd?.12:.09);if(fx>S2.ax+dzx)S2.ax=fx-dzx;else if(fx<S2.ax-dzx)S2.ax=fx+dzx;if(fz>S2.az+dzz)S2.az=fz-dzz;else if(fz<S2.az-dzz)S2.az=fz+dzz;
+  if(v>S2.av*1.04){S2.av=v;S2.inT=0}else if(v<S2.av*.86){S2.inT+=dt;if(S2.inT>.9){S2.av=v;S2.inT=0}}else S2.inT=0;
+  if(Math.hypot(S2.ax-S2.x,S2.az-S2.z)>28){S2.x=S2.ax;S2.z=S2.az;S2.vx=S2.vz=0}
+  const touch=L3.tDown&&performance.now()-L3.tDown<2500,w=touch?1.5:(B.fl?4.5:3.2);
+  [S2.x,S2.vx]=camSD(S2.x,S2.vx,S2.ax,w,dt);[S2.z,S2.vz]=camSD(S2.z,S2.vz,S2.az,w,dt);[S2.vv,S2.vz2]=camSD(S2.vv,S2.vz2,S2.av,touch?.8:1.6,dt);
+  /* laisse : la balle (puis ton joueur) ne sort jamais de l'écran, même pendant le lissage */
+  const loose={l:.04,r:.96,t:.1,b:.94},leash=(px,pz,maxIt)=>{for(let it=0;it<maxIt;it++){const P=camProj(camGeo(S2.x,S2.z,S2.vv,por,fs,sd),W,H);if(camIn(P(px,pz),W,H,loose))return;S2.x+=(px-S2.x)*.22;S2.z+=(pz-S2.z)*.22;if(it>=3)S2.vv=Math.min(hi*1.1,S2.vv*1.06)}};
+  if(Hh)leash(Hh.x,Hh.y,3);leash(B.x,B.y,10);
+  L3.figK=por?clamp(1.25+S2.vv/30,1.5,2.3):clamp(1.15+S2.vv/52,1.45,2.15);L3.pcF=[S2.x,S2.z];
+  return camGeo(S2.x,S2.z,S2.vv,por,fs,sd)}
+/* ton joueur ⭐ hors de l'écran : pastille au bord */
+function camHeroEdge(c,P,W,H,t,M){if(!M||!M.eng||!pilOn(M))return;const hi=pilHi(M);if(hi<0)return;const h=M.eng.u[hi],q=P(h.x,1,h.y);
+  const out=!q||q[0]<6||q[0]>W-6||q[1]<40||q[1]>H-6;if(!out)return;const cx=W/2,cy=H/2;let ang;if(q)ang=Math.atan2(q[1]-cy,q[0]-cx);else ang=h.x<(L3.pcF?L3.pcF[0]:0)?Math.PI/2:-Math.PI/2;
+  const R=Math.min(W,H)/2-26,x=clamp(cx+Math.cos(ang)*W,26,W-26),y=clamp(cy+Math.sin(ang)*H,52,H-34);
+  c.save();c.globalAlpha=.8+.2*Math.sin(t/150);c.fillStyle='#FFC928';c.strokeStyle='#5a3d00';c.lineWidth=2;c.beginPath();c.arc(x,y,16,0,7);c.fill();c.stroke();
+  c.beginPath();c.moveTo(x+Math.cos(ang)*26,y+Math.sin(ang)*26);c.lineTo(x+Math.cos(ang+.5)*16,y+Math.sin(ang+.5)*16);c.lineTo(x+Math.cos(ang-.5)*16,y+Math.sin(ang-.5)*16);c.closePath();c.fill();c.stroke();
+  c.font='15px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#000';c.fillText('⭐',x,y+1);c.restore()}
+if(!window.__camTouch){window.__camTouch=1;window.addEventListener('pointerdown',e=>{if(e.target&&e.target.closest&&e.target.closest('canvas.m3d'))L3.tDown=performance.now()},true);window.addEventListener('pointerup',()=>{L3.tDown=0},true);window.addEventListener('pointercancel',()=>{L3.tDown=0},true)}
 </script>
 <script type="text/plain" id="three-src">
 /**
