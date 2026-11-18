@@ -1178,7 +1178,7 @@ const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(R()*
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 /* deux parties séparées : U12 et U10 */
 const SLOTS={u12:{cat:'U12',key:'hockey-manager-junior-u12-v1'},u10:{cat:'U10',key:'hockey-manager-junior-u10-v1'},u8:{cat:'U8',key:'hockey-manager-junior-u8-v1'}};
-const APP_V='v100';
+const APP_V='v101';
 let SLOT=(()=>{try{return localStorage.getItem('hmj-slot')||'u12'}catch(e){return 'u12'}})();
 const keyOf=()=>SLOTS[SLOT].key;
 function save(){try{localStorage.setItem(keyOf(),JSON.stringify(S))}catch(e){}}
@@ -7935,32 +7935,35 @@ function camCenter(pts,por){let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;pts.forEach(p=>{x0
 const CAMZ={por:[[14,20],[16,26],[22,34]],land:[[18,30],[22,42],[32,58]],side:[[20,30],[24,40],[32,54]]};
 function pilCam(M,por,dt){const E=M.eng;if(!E)return null;const r=L3.hr;if(!r)return null;const W=Math.max(60,r.width),H=Math.max(60,r.height),fs=typeof FS!=='undefined'&&FS.on,zl=S.fsZoom??1,sd=!por&&(S.lsView||'side')==='side',[lo,hi]=CAMZ[por?'por':sd?'side':'land'][zl];
   const hi_=pilHi(M),B=E.ball,Hh=hi_>=0?E.u[hi_]:null,own=B.own,us=own&&own.s==='u',them=own&&own.s==='o',heroHas=us&&own.i===hi_;
-  const bvx=B.fl?0:(B.own?(own.s==='u'?E.u:E.o)[own.i].vx||0:0),bvy=B.fl?0:(B.own?(own.s==='u'?E.u:E.o)[own.i].vy||0:0),must=[[B.x,B.y],[B.x+bvx*.5,B.y+bvy*.5]],opt=[];
+  const must=[[B.x,B.y]],opt=[],now=performance.now();
   if(B.fl&&B.fl.x1!=null)must.push([B.fl.x1,B.fl.y1]);
-  if(heroHas){opt.push([Math.min(RPL-.5,Hh.x+11),Hh.y*.65+RGZ*.35]);
-    E.u.forEach((p,i)=>{if(i===hi_||i===0)return;const dx=p.x-Hh.x,d=Math.hypot(dx,p.y-Hh.y);if(dx>-4&&d<19)opt.push([p.x,p.y,d])});
-    let no=null,nd=9;E.o.forEach(p=>{const d=Math.hypot(p.x-Hh.x,p.y-Hh.y);if(d<nd){nd=d;no=p}});if(no)opt.unshift([no.x,no.y])}
-  else if(us)opt.push([Math.min(RPL-.5,B.x+9),B.y]);
-  else if(them){if(B.x<22)opt.push([1,RGZ]);else opt.push([Math.max(1,B.x-7),B.y])}
+  if(heroHas){opt.push(['goal',Math.min(RPL-.5,Hh.x+11),Hh.y*.65+RGZ*.35,0]);
+    E.u.forEach((p,i)=>{if(i===hi_||i===0||p.sin>0)return;const dx=p.x-Hh.x,d=Math.hypot(dx,p.y-Hh.y);if(dx>-4&&d<19)opt.push(['u'+i,p.x,p.y,d])});
+    let no=null,nd=9,nj=-1;E.o.forEach((p,j)=>{const d=Math.hypot(p.x-Hh.x,p.y-Hh.y);if(d<nd){nd=d;no=p;nj=j}});if(no)opt.unshift(['o'+nj,no.x,no.y,-1])}
+  else if(us)opt.push(['space',Math.min(RPL-.5,B.x+9),B.y,0]);
+  else if(them){if(B.x<22)opt.push(['ourgoal',1,RGZ,0]);else opt.push(['back',Math.max(1,B.x-7),B.y,0])}
   if(M.pcx){const pc=M.pcx,A=E[pc.A],gx=pc.side==='att'?EW:0;must.length=0;must.push([gx,EGY-3.5],[gx,EGY+3.5],[A[pc.inj].x,A[pc.inj].y],[A[pc.hit].x,A[pc.hit].y]);opt.length=0}
-  opt.sort((a,b)=>(a[2]||0)-(b[2]||0));
-  /* priorité : balle (+ destination), puis ton joueur, puis le contexte tant que ça tient */
+  /* mémoire de cadrage : un point de contexte gardé reste au moins 1,5 s (évite que la caméra hésite) */
+  const S2=L3.cam2&&L3.cam2.por===por&&L3.cam2.zl===zl&&L3.cam2.fs===fs&&L3.cam2.sd===sd?L3.cam2:(L3.cam2={por,zl,fs,sd,init:1,keep:{},vx:0,vz:0,vz2:0,inT:0});
+  opt.sort((a,b)=>{const ka=S2.keep[a[0]]>now?-50:0,kb=S2.keep[b[0]]>now?-50:0;return (a[3]+ka)-(b[3]+kb)});
   let set=must.slice(),c=camCenter(set),v=camFit(set,c[0],c[1],lo,hi,W,H,por,fs,sd);
-  if(v==null){set=[[B.x,B.y]];c=camCenter(set);v=lo}
-  if(Hh){const s2=set.concat([[Hh.x,Hh.y]]),c2=camCenter(s2),v2=camFit(s2,c2[0],c2[1],lo,hi,W,H,por,fs,sd);if(v2!=null){set=s2;c=c2;v=v2}else{const k=.35;c=[c[0]+(Hh.x-c[0])*k,c[1]+(Hh.y-c[1])*k];v=hi}}
-  for(const p of opt.slice(0,4)){const s2=set.concat([[p[0],p[1]]]),c2=camCenter(s2),v2=camFit(s2,c2[0],c2[1],lo,hi,W,H,por,fs,sd);if(v2!=null&&v2<=Math.max(v*1.25,lo*1.15)){set=s2;c=c2;v=v2}}
-  /* un peu d'espace devant soi */
+  if(v==null){set=[[B.x,B.y]];c=camCenter(set);v=hi}
+  if(Hh&&!M.pcx){const s2=set.concat([[Hh.x,Hh.y]]),c2=camCenter(s2),v2=camFit(s2,c2[0],c2[1],lo,hi,W,H,por,fs,sd);if(v2!=null){set=s2;c=c2;v=v2}else{const k=.3;c=[c[0]+(Hh.x-c[0])*k,c[1]+(Hh.y-c[1])*k];v=hi}}
+  for(const p of opt.slice(0,4)){const s2=set.concat([[p[1],p[2]]]),c2=camCenter(s2),v2=camFit(s2,c2[0],c2[1],lo,hi,W,H,por,fs,sd),kept=S2.keep[p[0]]>now;if(v2!=null&&v2<=Math.max(v*(kept?1.4:1.2),lo*1.15)){set=s2;c=c2;v=v2;S2.keep[p[0]]=Math.max(S2.keep[p[0]]||0,now+1500)}}
   let fx=c[0]+(us?(sd?3:1.5):them?(sd?-2:-1):0),fz=c[1];fx=clamp(fx,4,RPL-4);fz=clamp(fz,5,RPW-5);
-  /* zone morte + hystérésis du zoom */
-  const S2=L3.cam2&&L3.cam2.por===por&&L3.cam2.zl===zl&&L3.cam2.fs===fs&&L3.cam2.sd===sd?L3.cam2:(L3.cam2={por,zl,fs,sd,ax:fx,az:fz,av:v,x:fx,z:fz,vv:v,vx:0,vz:0,vz2:0,inT:0});
-  const dzx=S2.av*(sd?.08:.1),dzz=S2.av*(sd?.12:.09);if(fx>S2.ax+dzx)S2.ax=fx-dzx;else if(fx<S2.ax-dzx)S2.ax=fx+dzx;if(fz>S2.az+dzz)S2.az=fz-dzz;else if(fz<S2.az-dzz)S2.az=fz+dzz;
-  if(v>S2.av*1.04){S2.av=v;S2.inT=0}else if(v<S2.av*.86){S2.inT+=dt;if(S2.inT>.9){S2.av=v;S2.inT=0}}else S2.inT=0;
-  if(Math.hypot(S2.ax-S2.x,S2.az-S2.z)>28){S2.x=S2.ax;S2.z=S2.az;S2.vx=S2.vz=0}
-  const touch=L3.tDown&&performance.now()-L3.tDown<2500,w=touch?1.5:(B.fl?4.5:3.2);
-  [S2.x,S2.vx]=camSD(S2.x,S2.vx,S2.ax,w,dt);[S2.z,S2.vz]=camSD(S2.z,S2.vz,S2.az,w,dt);[S2.vv,S2.vz2]=camSD(S2.vv,S2.vz2,S2.av,touch?.8:1.6,dt);
-  /* laisse : la balle (puis ton joueur) ne sort jamais de l'écran, même pendant le lissage */
-  const loose={l:.04,r:.96,t:.1,b:.94},leash=(px,pz,maxIt)=>{for(let it=0;it<maxIt;it++){const P=camProj(camGeo(S2.x,S2.z,S2.vv,por,fs,sd),W,H);if(camIn(P(px,pz),W,H,loose))return;S2.x+=(px-S2.x)*.22;S2.z+=(pz-S2.z)*.22;if(it>=3)S2.vv=Math.min(hi*1.1,S2.vv*1.06)}};
-  if(Hh)leash(Hh.x,Hh.y,3);leash(B.x,B.y,10);
+  if(S2.init){S2.init=0;S2.fx=fx;S2.fz=fz;S2.ax=fx;S2.az=fz;S2.av=v;S2.x=fx;S2.z=fz;S2.vv=v}
+  /* 1) filtre doux sur la cible (supprime les sauts quand le contexte change) */
+  const kf=1-Math.exp(-dt/.4);S2.fx+=(fx-S2.fx)*kf;S2.fz+=(fz-S2.fz)*kf;
+  /* 2) zone morte : on ne bouge que si l'action s'éloigne vraiment */
+  const dzx=S2.av*(sd?.08:.1),dzz=S2.av*(sd?.12:.09);if(S2.fx>S2.ax+dzx)S2.ax=S2.fx-dzx;else if(S2.fx<S2.ax-dzx)S2.ax=S2.fx+dzx;if(S2.fz>S2.az+dzz)S2.az=S2.fz-dzz;else if(S2.fz<S2.az-dzz)S2.az=S2.fz+dzz;
+  /* 3) zoom : on recule tout de suite, on se rapproche seulement après un vrai calme */
+  if(v>S2.av*1.06){S2.av=v;S2.inT=0}else if(v<S2.av*.82){S2.inT+=dt;if(S2.inT>1.4){S2.av=Math.max(v,S2.av*.9);S2.inT=0}}else S2.inT=0;
+  if(Math.hypot(S2.ax-S2.x,S2.az-S2.z)>28){S2.x=S2.ax;S2.z=S2.az;S2.fx=S2.ax;S2.fz=S2.az;S2.vx=S2.vz=0}
+  /* 4) si la balle sort du cadre : la caméra rattrape plus vite (sans à-coups) */
+  const P0=camProj(camGeo(S2.x,S2.z,S2.vv,por,fs,sd),W,H),bq=P0(B.x,B.y),out=!camIn(bq,W,H,{l:.06,r:.94,t:.12,b:.92});
+  if(out){S2.ax=S2.ax*.6+B.x*.4;S2.az=S2.az*.6+B.y*.4;if(!S2.outT||now-S2.outT>350)S2.av=Math.min(hi*1.05,S2.av*1.08);S2.outT=now}
+  const touch=L3.tDown&&now-L3.tDown<2500,catchUp=S2.outT&&now-S2.outT<600,w=catchUp?7:touch?1.6:(B.fl?3.4:2.6);
+  [S2.x,S2.vx]=camSD(S2.x,S2.vx,S2.ax,w,dt);[S2.z,S2.vz]=camSD(S2.z,S2.vz,S2.az,w,dt);[S2.vv,S2.vz2]=camSD(S2.vv,S2.vz2,S2.av,touch?.8:1.3,dt);
   L3.figK=por?clamp(1.25+S2.vv/30,1.5,2.3):clamp(1.15+S2.vv/52,1.45,2.15);L3.pcF=[S2.x,S2.z];
   return camGeo(S2.x,S2.z,S2.vv,por,fs,sd)}
 /* ton joueur ⭐ hors de l'écran : pastille au bord */
