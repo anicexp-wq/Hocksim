@@ -1154,6 +1154,11 @@ button,.btn,.tok,.fsbt{touch-action:manipulation}
 .pcxgoal{position:relative;height:64px;margin:6px 8px;border:5px solid #fff;border-bottom:0;border-radius:4px 4px 0 0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.18) 0 2px,transparent 2px 14px),repeating-linear-gradient(0deg,rgba(255,255,255,.18) 0 2px,transparent 2px 14px);touch-action:none;cursor:crosshair}
 .pcxgoal .gk{position:absolute;bottom:2px;transform:translateX(-50%);font-size:30px;pointer-events:none}.pcxgoal .aim{display:none;position:absolute;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border:3px solid #FFC928;border-radius:50%;box-shadow:0 0 0 3px rgba(0,0,0,.4);pointer-events:none}
 .pcx .pgb{position:relative;height:16px;margin:4px 8px;border-radius:8px;background:#33415c;overflow:hidden}.pcx .pgb .pgz{position:absolute;top:0;bottom:0;background:#22C27A}.pcx .pgb i{position:absolute;top:-2px;bottom:-2px;width:5px;margin-left:-2px;background:#fff;border-radius:3px}
+.pilintro{position:fixed!important;z-index:9700!important;padding:max(10px,env(safe-area-inset-top)) 10px max(10px,env(safe-area-inset-bottom))!important}
+.pilintro>div,.fstuto>div{position:relative;max-height:calc(100dvh - 24px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y}
+.pilintro .bigbtn,.fstuto .bigbtn{position:sticky;bottom:0;box-shadow:0 -8px 14px var(--surface,#fff)}
+.pilintro .pix{position:sticky;top:0;float:right;margin:-6px -8px 0 0;width:36px;height:36px;border-radius:50%;border:0;background:#e8eef7;font-size:18px;z-index:1}
+@media (orientation:landscape) and (max-height:520px){.pilintro>div{max-width:min(760px,96vw)}.pilintro ul{columns:2;column-gap:18px}.pilintro li{break-inside:avoid}}
 </style>
 </head>
 <body>
@@ -1173,7 +1178,7 @@ const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(R()*
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 /* deux parties séparées : U12 et U10 */
 const SLOTS={u12:{cat:'U12',key:'hockey-manager-junior-u12-v1'},u10:{cat:'U10',key:'hockey-manager-junior-u10-v1'},u8:{cat:'U8',key:'hockey-manager-junior-u8-v1'}};
-const APP_V='v99';
+const APP_V='v100';
 let SLOT=(()=>{try{return localStorage.getItem('hmj-slot')||'u12'}catch(e){return 'u12'}})();
 const keyOf=()=>SLOTS[SLOT].key;
 function save(){try{localStorage.setItem(keyOf(),JSON.stringify(S))}catch(e){}}
@@ -6861,7 +6866,7 @@ function pilIntro(M){const host=$('#mpitch')&&$('#mpitch').parentElement;if(!hos
   const el=document.createElement('div');el.className='pilintro';el.innerHTML=`<div><b>🕹️ Nouveau : c’est TOI qui joues !</b><p>Pendant le match, tu diriges ${hn} ⭐ avec ton doigt :</p>
    <ul><li>👆 <b>Touche le terrain</b> : ${hn} court là-bas (garde le doigt pour le guider)</li><li>⚔️ <b>Balle au pied, glisse le doigt</b> : sur le côté = feinte (va du côté SANS mur rouge !), vers l’avant = pousse et file</li><li>🤝 <b>Touche un coéquipier</b> : passe</li><li>🥅 <b>Reste appuyé sur le but</b> : tir chargé (lâche dans le vert !)</li><li>🛡️ <b>Touche l’adversaire qui a la balle</b> : tacle</li><li>🙋 <b>Touche ${hn}</b> quand un coéquipier a la balle : « Ici ! »</li></ul>
    <p class="hint">Quand un défenseur arrive, le temps ralentit un instant : à toi de choisir le bon côté.</p><button class="btn go bigbtn">C’est parti ! ▶</button></div>`;
-  host.appendChild(el);el.querySelector('button').addEventListener('click',()=>{el.remove();M.running=true;loop()})}
+  el.firstElementChild.insertAdjacentHTML('afterbegin','<button class="pix" aria-label="Fermer">✕</button>');document.body.appendChild(el);const go=()=>{if(!el.isConnected)return;el.remove();M.running=true;loop()};el.querySelectorAll('.bigbtn,.pix').forEach(b=>b.addEventListener('click',go))}
 /* consigne contextuelle (au début, ou si l'enfant ne touche plus l'écran) */
 function pilHintTick(M){const host=$('#mpitch')&&$('#mpitch').parentElement;if(!host)return;const P=pilS(M),E=M.eng,o=E.ball.own,hi=pilHi(M);
   const learn=(S.pilN||0)<3, idle=pilIdle(M), duel=P.duelT&&pilNow()<P.duelT;let txt='',k='';
@@ -8139,7 +8144,7 @@ function gpNews(M){const host=$('#mpitch')&&$('#mpitch').parentElement;if(!host)
    <li>⚡ <b>Auto-passe</b> : sur un coup franc pour toi, tu peux repartir tout seul avec la balle.</li>
    <li>🏑 <b>Corners courts</b> : choisis ta combinaison et frappe toi-même ; en défense, sors au bon moment !</li>
    <li>🔥 <b>Temps fort</b> : enchaîne les bonnes actions pour remplir la jauge d’élan : ton équipe joue plus vite pendant 25 secondes !</li></ul><button class="btn go bigbtn">Super, on joue ! ▶</button></div>`;
-  host.appendChild(el);el.querySelector('button').addEventListener('click',()=>{el.remove();M.running=true;loop()})}
+  el.firstElementChild.insertAdjacentHTML('afterbegin','<button class="pix" aria-label="Fermer">✕</button>');document.body.appendChild(el);const go=()=>{if(!el.isConnected)return;el.remove();M.running=true;loop()};el.querySelectorAll('.bigbtn,.pix').forEach(b=>b.addEventListener('click',go))}
 /* coup franc : 5 mètres + auto-passe */
 function gpFreeHit(M,a,ai,d,dj,why){const E=M.eng;E.fh={s:a,i:ai,until:GPN()+1800};if(M.fast||!pilOn(M))return;const P=pilS(M),hi=pilHi(M);
   if(d==='u'&&dj===hi){M.fT=M.fT||{};if(!M.fT[why]){M.fT[why]=1;setTimeout(()=>toast(`🟥 Faute (${why}) : ${GPFT[why]}.`),300)}}
